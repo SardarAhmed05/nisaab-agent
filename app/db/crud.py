@@ -60,6 +60,24 @@ async def get_balance(
     expense = (await session.execute(expense_sum)).scalar() or 0.0
     return income - expense
 
+async def get_total_expenses(
+    session: AsyncSession,
+    category: str | None = None,
+    date_from: date_type | None = None,
+    date_to: date_type | None = None,
+) -> float:
+    expense_sum = select(func.sum(Transaction.amount)).where(Transaction.type == "expense")
+
+    if category:
+        expense_sum = expense_sum.where(Transaction.category == category)
+    if date_from:
+        expense_sum = expense_sum.where(Transaction.date >= date_from)
+    if date_to:
+        expense_sum = expense_sum.where(Transaction.date <= date_to)
+
+    expense = (await session.execute(expense_sum)).scalar() or 0.0
+    return expense
+
 async def get_transaction_by_id(
     session: AsyncSession,
     txn_id: int

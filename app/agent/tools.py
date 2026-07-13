@@ -52,6 +52,28 @@ async def search_transaction(
         )
         return f"Statement: {txns}"
 
+@tool 
+async def get_total_expenses(
+    category: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+) -> str:
+    """Get total expenses (money spent), optionally filtered by category and/or a date range 
+(date_from, date_to, in YYYY-MM-DD format). Use this when the user asks how much they've 
+spent, not their balance. This is different from get_balance, which returns net balance 
+(income minus expenses), not total spending."""
+
+    parsed_date_from = date_type.fromisoformat(date_from) if date_from else None
+    parsed_date_to = date_type.fromisoformat(date_to) if date_to else None
+    async with AsyncSessionLocal() as session:
+        total = await crud.get_total_expenses(
+            session=session,
+            category=category,
+            date_to=parsed_date_to,
+            date_from=parsed_date_from
+        )
+        return f"Expenses: {total}"
+
 @tool
 async def get_balance() -> str:
     """Get the current balance from the ledger"""
