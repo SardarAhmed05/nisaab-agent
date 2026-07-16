@@ -1,7 +1,7 @@
 # app/db/models.py
 from sqlalchemy import String, Float, Date, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 class Base(DeclarativeBase):
     pass
@@ -20,4 +20,4 @@ class Transaction(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     def __repr__(self) -> str:
-        return f"<Transaction {self.id} {self.type} {self.amount} {self.category} {self.description} {self.source} {self.created_at} {self.date} {self.confidence}>"
+        return f"<Transaction {self.id} {self.type} {self.amount} {self.category} {self.description} {self.source} {self.created_at + timedelta(hours=5)} {self.date} {self.confidence}>"

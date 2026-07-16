@@ -5,6 +5,8 @@ from sqlalchemy import func
 
 from app.db.models import Transaction
 
+# PHASE 1 CRUD
+
 async def create_transaction(
     session: AsyncSession,
     amount: float,
@@ -39,7 +41,7 @@ async def get_transactions(
     stmt = select(Transaction)
 
     if category:
-        stmt = stmt.where(Transaction.category == category)
+        stmt = stmt.where(Transaction.category.ilike(f"%{category}%"))
     if date_from:
         stmt = stmt.where(Transaction.date >= date_from)
     if date_to:
@@ -114,5 +116,21 @@ async def delete_transaction(
     else:   
         return False
         
+# PHASE 2 CRUD
 
+async def get_category_summary (
+        session: AsyncSession,
+        type: str,
+        date_from: date_type | None = None,
+        date_to: date_type | None = None
+) -> dict:
+    stmt = select(Transaction.category, func.sum(Transaction.amount)).where(Transaction.type == type).group_by(Transaction.category)
 
+    if date_from:
+        stmt = stmt.where(Transaction.date >= date_from)
+    if date_to:
+        stmt = stmt.where(Transaction.date <= date_to)
+
+    result = await session.execute(stmt)
+    rows = result.all()
+    return dict(rows)

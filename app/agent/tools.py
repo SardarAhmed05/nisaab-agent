@@ -3,6 +3,8 @@ from app.db import crud
 from app.db.session import AsyncSessionLocal
 from datetime import date as date_type
 
+# PHASE 1
+
 @tool
 async def add_transaction(
     amount: float, 
@@ -13,7 +15,14 @@ async def add_transaction(
     source: str | None = None,
     confidence: str = "confirmed"
 ) -> str:  
-    """Add a new income or expense transaction to the ledger"""
+    """Add a new income or expense transaction to the ledger. The category must describe 
+the actual source (for income) or purpose (for expense) — e.g. 'freelance', 'allowance', 
+'food', 'groceries', 'transport'. Never use the transaction's own type ('income' or 'expense') 
+as the category. Even if a category seems obvious, always call search_transaction first to check 
+whether a similar category already exists (e.g. don't create 'chai' as its own category if 'food' 
+already covers casual food/drink purchases) — reuse the existing category instead of creating a 
+near-duplicate. Only ask the user if search_transaction shows no reasonable existing match."""
+    category = category.lower()
     parsed_date = date_type.fromisoformat(date)
 
     async with AsyncSessionLocal() as session:
@@ -63,6 +72,7 @@ async def get_total_expenses(
 spent, not their balance. This is different from get_balance, which returns net balance 
 (income minus expenses), not total spending."""
 
+    category = category.lower() if category else None
     parsed_date_from = date_type.fromisoformat(date_from) if date_from else None
     parsed_date_to = date_type.fromisoformat(date_to) if date_to else None
     async with AsyncSessionLocal() as session:
@@ -76,7 +86,17 @@ spent, not their balance. This is different from get_balance, which returns net 
 
 @tool
 async def get_balance() -> str:
-    """Get the current balance from the ledger"""
+    """
+Get the user's current balance.
+
+Use this tool whenever the user asks about:
+- remaining money
+- money left for the month
+- available funds
+- spending capacity
+- budget planning
+- affordability
+"""
     async with AsyncSessionLocal() as session:
         balance = await crud.get_balance(session)
         return f"Balance: {balance}"
@@ -132,3 +152,28 @@ async def update_transaction(
         else:
             return "Failed to update transaction"
         
+
+# PHASE 2
+
+@tool
+async def get_category_summary(
+    cat_type: str,
+    date_from: str | None = None,
+    date_to: str | None = None,
+) -> str:
+    """Get a breakdown of totals grouped by category, for a given transaction type 
+("expense" or "income"). Use this to answer questions like "where's my money going" 
+(type="expense") or "where's my income coming from" (type="income"). Optionally filter 
+by a date range (date_from, date_to, in YYYY-MM-DD format). Unlike get_total_expenses, 
+which returns one single total, this returns a separate total for each category."""
+
+    parsed_date_from = date_type.fromisoformat(date_from) if date_from else None
+    parsed_date_to = date_type.fromisoformat(date_to) if date_to else None
+    async with AsyncSessionLocal() as session:
+        result = await crud.get_category_summary(
+            session=session,
+            type=cat_type,
+            date_from=parsed_date_from,
+            date_to=parsed_date_to
+        )
+        return f"Breakdown by category: ({cat_type}): {result}"
