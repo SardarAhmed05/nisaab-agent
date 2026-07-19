@@ -23,10 +23,10 @@ async def main():
 
         # JUST FOR FORMATTING
             # Print the whole AI message object
-        print("===== FULL AI MESSAGE =====")
-        for msg in result["messages"]:
-            if isinstance(msg, AIMessage):
-                print(msg)
+        #print("===== FULL AI MESSAGE =====")
+        #for msg in result["messages"]:
+            #if isinstance(msg, AIMessage):
+            #    print(msg)
 
         #print("\n\n")
 

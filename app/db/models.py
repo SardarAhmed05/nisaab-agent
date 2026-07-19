@@ -21,3 +21,17 @@ class Transaction(Base):
 
     def __repr__(self) -> str:
         return f"<Transaction {self.id} {self.type} {self.amount} {self.category} {self.description} {self.source} {self.created_at + timedelta(hours=5)} {self.date} {self.confidence}>"
+    
+
+class Budget(Base):
+    __tablename__ = "budgets"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    category: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    limit_amount: Mapped[float] = mapped_column(Float, nullable=False)
+    start_date: Mapped[date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    def __repr__(self) -> str:
+        return f"<Budget {self.id} {self.category} {self.limit_amount} {self.start_date} {self.end_date} {self.created_at + timedelta(hours=5)} >"

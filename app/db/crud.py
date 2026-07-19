@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy import func
 
-from app.db.models import Transaction
+from app.db.models import Transaction, Budget
 
 # PHASE 1 CRUD
 
@@ -134,3 +134,97 @@ async def get_category_summary (
     result = await session.execute(stmt)
     rows = result.all()
     return dict(rows)
+
+# PHASE 3
+
+async def create_budget(
+    session: AsyncSession,
+    limit_amount: float,
+    start_date: date_type,
+    end_date: date_type,
+    category: str | None = None
+) -> Budget:
+    budget = Budget(
+        limit_amount=limit_amount,
+        start_date=start_date,
+        end_date=end_date,
+        category=category,
+    )
+    session.add(budget)
+    await session.commit()
+    await session.refresh(budget)
+    return budget
+
+async def get_active_budgets(
+        session: AsyncSession,
+        category: str | None = None,
+) -> list[Budget]:
+    today = date_type.today()
+    if category is not None:
+        query = select(Budget).where(Budget.category == category, Budget.start_date <= today, Budget.end_date >= today)
+    else:
+        query = select(Budget).where(Budget.category.is_(None), Budget.start_date <= today, Budget.end_date >= today)
+
+    result = await session.execute(query)
+
+    return list(result.scalars().all())
+
+async def get_all_active_budgets(
+        session: AsyncSession
+) -> list[Budget]:
+    today = date_type.today()
+    query = select(Budget).where(Budget.start_date <= today, Budget.end_date >= today)
+
+    result = await session.execute(query)
+    return list(result.scalars().all())
+
+async def get_budget_by_id(
+    session: AsyncSession,
+    budget_id: int
+) -> Budget | None:
+    budget = select(Budget).where(Budget.id == budget_id)
+    budget = await session.execute(budget)
+    return budget.scalar_one_or_none()
+
+async def update_budget(
+    session: AsyncSession,
+    budget_id: int,
+    fields: dict
+) -> Budget | None:
+    budget = await get_budget_by_id(session, budget_id)
+    if budget is None:
+            return None
+    
+    for key, value in fields.items():
+        setattr(budget, key, value)
+
+    await session.commit()
+    await session.refresh(budget)
+    return budget
+
+async def delete_budget(
+    session: AsyncSession,
+    budget_id: int
+) -> bool:
+    budget = await get_budget_by_id(session, budget_id)
+    if budget:
+        await session.delete(budget)
+        await session.commit()
+        return True
+    else:   
+        return False
+    
+async def get_budget_status(
+        session: AsyncSession,
+        category: str | None = None,
+) -> dict | None:
+    budgets = await get_active_budgets(session, category)
+    if not budgets:
+        return None
+    budget = budgets[0]
+
+    limit = budget.limit_amount
+    spent = await get_total_expenses(session, category=budget.category, date_from=budget.start_date, date_to=budget.end_date)
+    percentage_used = round((spent/limit) * 100, 2) if limit > 0 else 0
+    status = {"limit": limit, "spent": spent, "percentage_used": percentage_used}
+    return status

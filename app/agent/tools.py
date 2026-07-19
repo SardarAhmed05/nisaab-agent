@@ -177,3 +177,144 @@ which returns one single total, this returns a separate total for each category.
             date_to=parsed_date_to
         )
         return f"Breakdown by category: ({cat_type}): {result}"
+    
+
+# PHASE 3
+
+@tool
+async def create_budget(
+    end_date: str,
+    limit_amount: float,
+    start_date: str | None = None,
+    category: str | None = None
+) -> str:  
+    """Create a budget with a given category, if there is no category provided, leave it as None
+    and assume its an overall budget. If start_date is not given, add it as today's date.
+    If end_date is not provided, infer the duration from the user's instruction. For weekly, monthly, or multi-day budgets, calculate the end_date from the start_date, not from calendar boundaries.
+    Example: a 1-week budget starting on 2026-07-19 ends on 2026-07-26.
+    If you are unable, ask them. Budget should be
+    created with four parameters, start date, end date, limit amount and category
+    If setting a category-specific budget, reuse the exact existing transaction category name. 
+    Do not invent capitalization, singular/plural, or spelling variations.
+    If its entirely a new category, create it"""
+    if start_date is None:
+        parsed_start_date = date_type.today()
+    else:
+        parsed_start_date = date_type.fromisoformat(start_date)
+
+    parsed_end_date = date_type.fromisoformat(end_date)
+
+    category = category.lower() if category else None
+    async with AsyncSessionLocal() as session:
+        budget = await crud.create_budget(
+            session,
+            limit_amount=limit_amount,
+            category=category,
+            start_date=parsed_start_date,
+            end_date=parsed_end_date
+        )
+        
+        return f"Added budget: {budget.limit_amount} PKR for category '{budget.category}' from {budget.start_date} to {budget.end_date} (id={budget.id})"
+    
+
+@tool
+async def get_active_budgets(
+    category: str | None = None
+) -> str:
+    """Find the currently active budget for a given category, 
+    or the overall budget if no category is given. Returns the 
+    budget's id, which is needed before calling update_budget or delete_budget."""
+    category = category.lower() if category else None
+    async with AsyncSessionLocal() as session:
+        budgets = await crud.get_active_budgets(
+            session,
+            category
+        )
+
+    if not budgets:
+        return "No Budgets found"
+    else:
+        budget = budgets[0]
+        
+    return f"Budget (id: {budget.id}) found with category: {budget.category}, Started on {budget.start_date} and ends on {budget.end_date} with limit: {budget.limit_amount}"
+
+@tool
+async def get_all_active_budgets() -> str:
+    """Return a budget or a list of active budgets"""
+    async with AsyncSessionLocal() as session:
+        budgets = await crud.get_all_active_budgets(session)
+    
+    if not budgets:
+        return "No Active Budgets Found"
+    else:
+        lines = lines = [
+    f"Category: {b.category or 'Overall'}, Limit: {b.limit_amount}, Start: {b.start_date}, End: {b.end_date} (id={b.id})"
+    for b in budgets
+    ]
+        return "\n".join(lines)
+
+@tool
+async def update_budget(
+    budget_id: int,
+    limit_amount: float | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    category: str | None = None,
+) -> str :
+    """Update a budget by its id. If you dont already know the budget's id,
+    use get_active_budgets tool first to find it. Only include the parameters you want to change; 
+    anything left unspecified stays the same"""
+    
+    category = category.lower() if category else None
+    parsed_start_date = date_type.fromisoformat(start_date) if start_date else None
+    parsed_end_date = date_type.fromisoformat(end_date) if end_date else None
+    fields = {
+        "limit_amount": limit_amount,
+        "start_date": parsed_start_date,
+        "end_date": parsed_end_date,
+        "category": category
+    }
+
+    fields = {k: v for k, v in fields.items() if v is not None}
+    async with AsyncSessionLocal() as session:
+        updated_budget = await crud.update_budget(
+            session=session,
+            budget_id=budget_id,
+            fields=fields
+        )
+        if updated_budget:
+            return f"Budget successfully updated. Updated Budget: {updated_budget}"
+        else:
+            return "Budget not found"
+        
+@tool
+async def delete_budget(budget_id: int) -> str:
+    """Delete a budget by its id. If you don't already know 
+    the budget's id, use get_active_budgets first to find it."""
+    
+    async with AsyncSessionLocal() as session:
+        result = await crud.delete_budget(session, budget_id)
+        if result:
+            return "Budget Deleted Successfully from ledger"
+        else:
+            return "Budget not found"
+        
+@tool
+async def get_budget_status(category: str | None = None) -> str:
+    """Return a budget's status (Amount Limit, Amount Spent and Remaining)
+    given a category"""
+
+    category = category.lower() if category else None
+    async with AsyncSessionLocal() as session:
+        status = await crud.get_budget_status(session, category)
+
+    if status:
+        return (
+            f"Budget Status\n"
+            f"Limit: PKR {status['limit']}\n"
+            f"Spent: PKR {status['spent']}\n"
+            f"Remaining: PKR {status['limit'] - status['spent']}\n"
+            f"Used: {status['percentage_used']}%"
+        )
+    else:
+        return "No active budget found for this category"

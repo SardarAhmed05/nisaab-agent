@@ -1,5 +1,5 @@
 from langchain_groq import ChatGroq
-from app.agent.tools import add_transaction, search_transaction, get_balance, get_total_expenses, update_transaction, delete_transaction, get_category_summary
+from app.agent.tools import *
 from app.agent.state import AgentState
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
@@ -16,7 +16,7 @@ llm = ChatGroq (
     temperature=0
 )
 
-tools = [add_transaction, search_transaction, get_balance, get_total_expenses, get_category_summary, update_transaction, delete_transaction]
+tools = [add_transaction, search_transaction, get_balance, get_total_expenses, get_category_summary, update_transaction, delete_transaction, create_budget, get_active_budgets, get_all_active_budgets, update_budget, delete_budget, get_budget_status]
 
 llm_with_tools = llm.bind_tools(tools)
 
@@ -28,13 +28,19 @@ async def agent_node(state: AgentState) -> dict:
 async def confirm_node(state: AgentState) -> dict:
     last_message = state["messages"][-1]
     for tool in last_message.tool_calls:
-        if tool["name"] in ["delete_transaction", "update_transaction"]:
+        if tool["name"] in ["delete_transaction", "update_transaction", "delete_budget", "update_budget"]:
             risky = tool
         
     if risky["name"] == "update_transaction":
         ask = interrupt(f"Do you want to confirm these updates: {risky['args']}")
 
     if risky["name"] == "delete_transaction":
+        ask = interrupt(f"Do you want to confirm the deletion: {risky['args']}")
+
+    if risky["name"] == "update_budget":
+        ask = interrupt(f"Do you want to confirm the updates: {risky['args']}")
+
+    if risky["name"] == "delete_budget":
         ask = interrupt(f"Do you want to confirm the deletion: {risky['args']}")
 
     messages = [
@@ -60,7 +66,7 @@ def should_continue(state: AgentState) -> str:
 def needs_confirmation(state: AgentState) -> bool:
     last_message = state["messages"][-1]
     for call in last_message.tool_calls:
-        if call["name"] in ["delete_transaction", "update_transaction"]:
+        if call["name"] in ["delete_transaction", "update_transaction", "delete_budget", "update_budget"]:
             return True
     return False
 
