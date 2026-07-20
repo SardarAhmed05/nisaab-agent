@@ -301,8 +301,15 @@ async def delete_budget(budget_id: int) -> str:
         
 @tool
 async def get_budget_status(category: str | None = None) -> str:
-    """Return a budget's status (Amount Limit, Amount Spent and Remaining)
-    given a category"""
+    """Return a budget's current status — limit, amount spent, remaining amount, and percentage used —
+for a given category, or the overall budget if no category is given. This tool automatically uses
+the budget's own actual start_date and end_date (which may not match the calendar month — a budget
+can start on any day and run for any length of time, e.g. 3 days, a week, or 6 months). This is the
+single correct tool for answering "how much have I spent against my budget" or "how am I doing on
+my budget" — do not call get_total_expenses separately to check budget progress, since that requires
+guessing the correct date range yourself and will likely use the wrong period (e.g. calendar month)
+instead of the budget's actual dates. If no active budget exists for the category, this tool will
+say so clearly."""
 
     category = category.lower() if category else None
     async with AsyncSessionLocal() as session:
