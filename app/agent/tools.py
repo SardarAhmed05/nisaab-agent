@@ -2,11 +2,14 @@ from langchain_core.tools import tool
 from app.db import crud
 from app.db.session import AsyncSessionLocal
 from datetime import date as date_type
+from typing import Annotated
+from langgraph.prebuilt import InjectedState
 
 # PHASE 1
 
 @tool
 async def add_transaction(
+    state: Annotated[dict, InjectedState],
     amount: float, 
     type: str, 
     category: str, 
@@ -22,12 +25,14 @@ as the category. Even if a category seems obvious, always call search_transactio
 whether a similar category already exists (e.g. don't create 'chai' as its own category if 'food' 
 already covers casual food/drink purchases) — reuse the existing category instead of creating a 
 near-duplicate. Only ask the user if search_transaction shows no reasonable existing match."""
-    category = category.lower()
+    user_id = state["user_id"]
+    category = category.lower() if category else None
     parsed_date = date_type.fromisoformat(date)
 
     async with AsyncSessionLocal() as session:
         txn = await crud.create_transaction(
-            session,
+            session=session,
+            user_id=user_id,
             amount=amount,
             type=type,
             category=category,
@@ -40,6 +45,7 @@ near-duplicate. Only ask the user if search_transaction shows no reasonable exis
 
 @tool 
 async def search_transaction(
+    state: Annotated[dict, InjectedState],
     category: str | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -49,11 +55,13 @@ async def search_transaction(
     date range (date_from, date_to, in YYYY-MM-DD format). If no filters are given, 
     returns the most recent transactions."""
 
+    user_id = state["user_id"]
     parsed_date_from = date_type.fromisoformat(date_from) if date_from else None
     parsed_date_to = date_type.fromisoformat(date_to) if date_to else None
     async with AsyncSessionLocal() as session:
         txns = await crud.get_transactions(
             session=session,
+            user_id=user_id,
             category=category,
             date_to=parsed_date_to,
             date_from=parsed_date_from,
@@ -63,6 +71,7 @@ async def search_transaction(
 
 @tool 
 async def get_total_expenses(
+    state: Annotated[dict, InjectedState],
     category: str | None = None,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -72,12 +81,14 @@ async def get_total_expenses(
 spent, not their balance. This is different from get_balance, which returns net balance 
 (income minus expenses), not total spending."""
 
+    user_id = state["user_id"]
     category = category.lower() if category else None
     parsed_date_from = date_type.fromisoformat(date_from) if date_from else None
     parsed_date_to = date_type.fromisoformat(date_to) if date_to else None
     async with AsyncSessionLocal() as session:
         total = await crud.get_total_expenses(
             session=session,
+            user_id=user_id,
             category=category,
             date_to=parsed_date_to,
             date_from=parsed_date_from
@@ -85,7 +96,7 @@ spent, not their balance. This is different from get_balance, which returns net 
         return f"Expenses: {total}"
 
 @tool
-async def get_balance() -> str:
+async def get_balance(state: Annotated[dict, InjectedState]) -> str:
     """
 Get the user's current balance.
 
@@ -97,18 +108,20 @@ Use this tool whenever the user asks about:
 - budget planning
 - affordability
 """
+    user_id = state["user_id"]
     async with AsyncSessionLocal() as session:
-        balance = await crud.get_balance(session)
+        balance = await crud.get_balance(session, user_id=user_id)
         return f"Balance: {balance}"
     
 # MULTI-STEP AGENTIC REASONING
 @tool
-async def delete_transaction(txn_id: int) -> str:
+async def delete_transaction(state: Annotated[dict, InjectedState], txn_id: int) -> str:
     """Delete a single transaction by its id. If you don't already know 
     the transaction's id, use search_transaction first to find it."""
     
+    user_id = state["user_id"]
     async with AsyncSessionLocal() as session:
-        result = await crud.delete_transaction(session, txn_id)
+        result = await crud.delete_transaction(session, user_id, txn_id)
         if result:
             return "Transaction Deleted Successfully from ledger"
         else:
@@ -116,6 +129,7 @@ async def delete_transaction(txn_id: int) -> str:
         
 @tool
 async def update_transaction(
+    state: Annotated[dict, InjectedState],
     txn_id: int,
     amount: float | None = None,
     txn_type: str | None = None,
@@ -129,6 +143,7 @@ async def update_transaction(
     use search_transaction first to find it. Only inclde the parameters you want to change; 
     anything left unspecified stays the same"""
     
+    user_id = state["user_id"]
     parsed_date = date_type.fromisoformat(date) if date else None
     fields = {
         "amount": amount,
@@ -144,6 +159,7 @@ async def update_transaction(
     async with AsyncSessionLocal() as session:
         updated_txn = await crud.update_transaction(
             session=session,
+            user_id=user_id,
             txn_id=txn_id,
             fields=fields
         )
@@ -157,6 +173,7 @@ async def update_transaction(
 
 @tool
 async def get_category_summary(
+    state: Annotated[dict, InjectedState],
     cat_type: str,
     date_from: str | None = None,
     date_to: str | None = None,
@@ -167,11 +184,13 @@ async def get_category_summary(
 by a date range (date_from, date_to, in YYYY-MM-DD format). Unlike get_total_expenses, 
 which returns one single total, this returns a separate total for each category."""
 
+    user_id = state["user_id"]
     parsed_date_from = date_type.fromisoformat(date_from) if date_from else None
     parsed_date_to = date_type.fromisoformat(date_to) if date_to else None
     async with AsyncSessionLocal() as session:
         result = await crud.get_category_summary(
             session=session,
+            user_id=user_id,
             type=cat_type,
             date_from=parsed_date_from,
             date_to=parsed_date_to
@@ -183,6 +202,7 @@ which returns one single total, this returns a separate total for each category.
 
 @tool
 async def create_budget(
+    state: Annotated[dict, InjectedState],
     end_date: str,
     limit_amount: float,
     start_date: str | None = None,
@@ -197,6 +217,8 @@ async def create_budget(
     If setting a category-specific budget, reuse the exact existing transaction category name. 
     Do not invent capitalization, singular/plural, or spelling variations.
     If its entirely a new category, create it"""
+
+    user_id = state["user_id"]
     if start_date is None:
         parsed_start_date = date_type.today()
     else:
@@ -208,6 +230,7 @@ async def create_budget(
     async with AsyncSessionLocal() as session:
         budget = await crud.create_budget(
             session,
+            user_id=user_id,
             limit_amount=limit_amount,
             category=category,
             start_date=parsed_start_date,
@@ -219,16 +242,20 @@ async def create_budget(
 
 @tool
 async def get_active_budgets(
+    state: Annotated[dict, InjectedState],
     category: str | None = None
 ) -> str:
     """Find the currently active budget for a given category, 
     or the overall budget if no category is given. Returns the 
     budget's id, which is needed before calling update_budget or delete_budget."""
+    
+    user_id = state["user_id"]
     category = category.lower() if category else None
     async with AsyncSessionLocal() as session:
         budgets = await crud.get_active_budgets(
             session,
-            category
+            category=category,
+            user_id=user_id
         )
 
     if not budgets:
@@ -239,15 +266,16 @@ async def get_active_budgets(
     return f"Budget (id: {budget.id}) found with category: {budget.category}, Started on {budget.start_date} and ends on {budget.end_date} with limit: {budget.limit_amount}"
 
 @tool
-async def get_all_active_budgets() -> str:
+async def get_all_active_budgets(state: Annotated[dict, InjectedState]) -> str:
     """Return a budget or a list of active budgets"""
+    user_id = state["user_id"]
     async with AsyncSessionLocal() as session:
-        budgets = await crud.get_all_active_budgets(session)
+        budgets = await crud.get_all_active_budgets(session, user_id)
     
     if not budgets:
         return "No Active Budgets Found"
     else:
-        lines = lines = [
+        lines = [
     f"Category: {b.category or 'Overall'}, Limit: {b.limit_amount}, Start: {b.start_date}, End: {b.end_date} (id={b.id})"
     for b in budgets
     ]
@@ -255,6 +283,7 @@ async def get_all_active_budgets() -> str:
 
 @tool
 async def update_budget(
+    state: Annotated[dict, InjectedState],
     budget_id: int,
     limit_amount: float | None = None,
     start_date: str | None = None,
@@ -265,6 +294,7 @@ async def update_budget(
     use get_active_budgets tool first to find it. Only include the parameters you want to change; 
     anything left unspecified stays the same"""
     
+    user_id = state["user_id"]
     category = category.lower() if category else None
     parsed_start_date = date_type.fromisoformat(start_date) if start_date else None
     parsed_end_date = date_type.fromisoformat(end_date) if end_date else None
@@ -279,6 +309,7 @@ async def update_budget(
     async with AsyncSessionLocal() as session:
         updated_budget = await crud.update_budget(
             session=session,
+            user_id=user_id,
             budget_id=budget_id,
             fields=fields
         )
@@ -288,19 +319,20 @@ async def update_budget(
             return "Budget not found"
         
 @tool
-async def delete_budget(budget_id: int) -> str:
+async def delete_budget(budget_id: int, state: Annotated[dict, InjectedState],) -> str:
     """Delete a budget by its id. If you don't already know 
     the budget's id, use get_active_budgets first to find it."""
     
+    user_id = state["user_id"]
     async with AsyncSessionLocal() as session:
-        result = await crud.delete_budget(session, budget_id)
+        result = await crud.delete_budget(session, user_id, budget_id)
         if result:
             return "Budget Deleted Successfully from ledger"
         else:
             return "Budget not found"
         
 @tool
-async def get_budget_status(category: str | None = None) -> str:
+async def get_budget_status(state: Annotated[dict, InjectedState], category: str | None = None) -> str:
     """Return a budget's current status — limit, amount spent, remaining amount, and percentage used —
 for a given category, or the overall budget if no category is given. This tool automatically uses
 the budget's own actual start_date and end_date (which may not match the calendar month — a budget
@@ -311,9 +343,10 @@ guessing the correct date range yourself and will likely use the wrong period (e
 instead of the budget's actual dates. If no active budget exists for the category, this tool will
 say so clearly."""
 
+    user_id = state["user_id"]
     category = category.lower() if category else None
     async with AsyncSessionLocal() as session:
-        status = await crud.get_budget_status(session, category)
+        status = await crud.get_budget_status(session, user_id, category)
 
     if status:
         return (

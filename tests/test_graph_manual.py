@@ -10,7 +10,14 @@ async def main():
         user_input = input("User: ")
         if user_input == "exit":
             break
-        result = await app.ainvoke({"messages": [HumanMessage(content=user_input)]}, config=config)
+        result = await app.ainvoke(
+            {
+                "messages": [HumanMessage(content=user_input)],
+                "platform": "cli",
+                "platform_id": "test-user-1",
+            },
+            config=config,
+        )
 
         if "__interrupt__" in result:
             question = result["__interrupt__"][0].value

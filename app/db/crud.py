@@ -3,12 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy import func
 
-from app.db.models import Transaction, Budget
+from app.db.models import Transaction, Budget, User, UserIdentity
 
 # PHASE 1 CRUD
 
 async def create_transaction(
     session: AsyncSession,
+    user_id: int,
     amount: float,
     type: str,
     category: str,
@@ -18,6 +19,7 @@ async def create_transaction(
     confidence: str = "confirmed",
 ) -> Transaction:
     txn = Transaction(
+        user_id=user_id,
         amount=amount,
         type=type,
         category=category,
@@ -33,12 +35,13 @@ async def create_transaction(
 
 async def get_transactions(
         session: AsyncSession,
+        user_id: int,
         category: str | None = None,
         date_from: date_type | None = None,
         date_to: date_type | None = None,
         limit: int = 10,
 ) -> list[Transaction]:
-    stmt = select(Transaction)
+    stmt = select(Transaction).where(Transaction.user_id==user_id)
 
     if category:
         stmt = stmt.where(Transaction.category.ilike(f"%{category}%"))
@@ -54,9 +57,12 @@ async def get_transactions(
 
 async def get_balance(
         session: AsyncSession,
+        user_id: int,
 ) -> float:
-    income_sum = select(func.sum(Transaction.amount)).where(Transaction.type == "income")
-    expense_sum = select(func.sum(Transaction.amount)).where(Transaction.type == "expense")
+    income_sum = select(func.sum(Transaction.amount)).where(Transaction.user_id==user_id) 
+    income_sum = income_sum.where(Transaction.type == "income")
+    expense_sum = select(func.sum(Transaction.amount)).where(Transaction.user_id==user_id)
+    expense_sum = expense_sum.where(Transaction.type == "expense")
     
     income = (await session.execute(income_sum)).scalar() or 0.0
     expense = (await session.execute(expense_sum)).scalar() or 0.0
@@ -64,12 +70,14 @@ async def get_balance(
 
 async def get_total_expenses(
     session: AsyncSession,
+    user_id: int,
     category: str | None = None,
     date_from: date_type | None = None,
     date_to: date_type | None = None,
 ) -> float:
-    expense_sum = select(func.sum(Transaction.amount)).where(Transaction.type == "expense")
-
+    expense_sum = select(func.sum(Transaction.amount)).where(Transaction.user_id==user_id)
+    expense_sum = expense_sum.where(Transaction.type == "expense")
+    
     if category:
         expense_sum = expense_sum.where(Transaction.category == category)
     if date_from:
@@ -82,18 +90,20 @@ async def get_total_expenses(
 
 async def get_transaction_by_id(
     session: AsyncSession,
+    user_id: int,
     txn_id: int
 ) -> Transaction | None:
-    txn = select(Transaction).where(Transaction.id == txn_id)
+    txn = select(Transaction).where(Transaction.id == txn_id, Transaction.user_id == user_id)
     txn = await session.execute(txn)
     return txn.scalar_one_or_none()
 
 async def update_transaction(
     session: AsyncSession,
+    user_id: int,
     txn_id: int,
     fields: dict
 ) -> Transaction | None:
-    txn = await get_transaction_by_id(session, txn_id)
+    txn = await get_transaction_by_id(session, user_id, txn_id)
     if txn is None:
             return None
     
@@ -106,9 +116,10 @@ async def update_transaction(
 
 async def delete_transaction(
     session: AsyncSession,
+    user_id: int,
     txn_id: int
 ) -> bool:
-    txn = await get_transaction_by_id(session, txn_id)
+    txn = await get_transaction_by_id(session, user_id, txn_id)
     if txn:
         await session.delete(txn)
         await session.commit()
@@ -120,11 +131,12 @@ async def delete_transaction(
 
 async def get_category_summary (
         session: AsyncSession,
+        user_id: int,
         type: str,
         date_from: date_type | None = None,
         date_to: date_type | None = None
 ) -> dict:
-    stmt = select(Transaction.category, func.sum(Transaction.amount)).where(Transaction.type == type).group_by(Transaction.category)
+    stmt = select(Transaction.category, func.sum(Transaction.amount)).where(Transaction.type == type, Transaction.user_id==user_id).group_by(Transaction.category)
 
     if date_from:
         stmt = stmt.where(Transaction.date >= date_from)
@@ -139,12 +151,14 @@ async def get_category_summary (
 
 async def create_budget(
     session: AsyncSession,
+    user_id: int,
     limit_amount: float,
     start_date: date_type,
     end_date: date_type,
     category: str | None = None
 ) -> Budget:
     budget = Budget(
+        user_id=user_id,
         limit_amount=limit_amount,
         start_date=start_date,
         end_date=end_date,
@@ -157,41 +171,45 @@ async def create_budget(
 
 async def get_active_budgets(
         session: AsyncSession,
+        user_id: int,
         category: str | None = None,
 ) -> list[Budget]:
     today = date_type.today()
     if category is not None:
-        query = select(Budget).where(Budget.category == category, Budget.start_date <= today, Budget.end_date >= today)
+        query = select(Budget).where(Budget.category == category, Budget.start_date <= today, Budget.end_date >= today, Budget.user_id==user_id)
     else:
-        query = select(Budget).where(Budget.category.is_(None), Budget.start_date <= today, Budget.end_date >= today)
+        query = select(Budget).where(Budget.category.is_(None), Budget.start_date <= today, Budget.end_date >= today, Budget.user_id==user_id)
 
     result = await session.execute(query)
 
     return list(result.scalars().all())
 
 async def get_all_active_budgets(
-        session: AsyncSession
+        session: AsyncSession,
+        user_id: int
 ) -> list[Budget]:
     today = date_type.today()
-    query = select(Budget).where(Budget.start_date <= today, Budget.end_date >= today)
+    query = select(Budget).where(Budget.start_date <= today, Budget.end_date >= today, Budget.user_id==user_id)
 
     result = await session.execute(query)
     return list(result.scalars().all())
 
 async def get_budget_by_id(
     session: AsyncSession,
+    user_id: int,
     budget_id: int
 ) -> Budget | None:
-    budget = select(Budget).where(Budget.id == budget_id)
+    budget = select(Budget).where(Budget.id == budget_id, Budget.user_id==user_id)
     budget = await session.execute(budget)
     return budget.scalar_one_or_none()
 
 async def update_budget(
     session: AsyncSession,
+    user_id: int,
     budget_id: int,
     fields: dict
 ) -> Budget | None:
-    budget = await get_budget_by_id(session, budget_id)
+    budget = await get_budget_by_id(session, user_id, budget_id)
     if budget is None:
             return None
     
@@ -204,9 +222,10 @@ async def update_budget(
 
 async def delete_budget(
     session: AsyncSession,
+    user_id: int,
     budget_id: int
 ) -> bool:
-    budget = await get_budget_by_id(session, budget_id)
+    budget = await get_budget_by_id(session, user_id, budget_id)
     if budget:
         await session.delete(budget)
         await session.commit()
@@ -216,15 +235,54 @@ async def delete_budget(
     
 async def get_budget_status(
         session: AsyncSession,
+        user_id: int,
         category: str | None = None,
 ) -> dict | None:
-    budgets = await get_active_budgets(session, category)
+    budgets = await get_active_budgets(session, user_id, category)
     if not budgets:
         return None
     budget = budgets[0]
 
     limit = budget.limit_amount
-    spent = await get_total_expenses(session, category=budget.category, date_from=budget.start_date, date_to=budget.end_date)
+    spent = await get_total_expenses(session, user_id, category=budget.category, date_from=budget.start_date, date_to=budget.end_date)
     percentage_used = round((spent/limit) * 100, 2) if limit > 0 else 0
     status = {"limit": limit, "spent": spent, "percentage_used": percentage_used}
     return status
+
+# PHASE 3.5
+
+async def get_or_create_user(
+    session: AsyncSession,
+    platform: str,
+    platform_id: str,
+    username: str | None = None,
+    name: str | None = None
+) -> User:
+    query = select(UserIdentity).where(UserIdentity.platform == platform, UserIdentity.platform_id == platform_id)
+    identity = await session.execute(query)
+    identity = identity.scalar_one_or_none()
+
+    if identity is not None:
+        user_query = select(User).where(User.id == identity.user_id)
+        user_result = await session.execute(user_query)
+        return user_result.scalar_one_or_none()
+    
+
+    user = User(
+        username=username,
+        name=name
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    user_identity = UserIdentity(
+        user_id=user.id,
+        platform=platform,
+        platform_id=platform_id
+    )
+    session.add(user_identity)
+    await session.commit()
+    await session.refresh(user_identity)
+
+    return user
