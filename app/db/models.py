@@ -1,5 +1,5 @@
 # app/db/models.py
-from sqlalchemy import String, Float, Date, DateTime, func, ForeignKey, UniqueConstraint
+from sqlalchemy import Integer, String, Float, Date, DateTime, func, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from datetime import date, datetime, timedelta
 
@@ -44,6 +44,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(25), nullable=True, unique=True)
     name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(50), nullable=True, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     def __repr__(self) -> str:
@@ -63,4 +64,17 @@ class UserIdentity(Base):
 
     def __repr__(self) -> str:
         return f"<UserIdentity {self.id} {self.user_id} {self.platform} {self.platform_id} {self.created_at + timedelta(hours=5)} >"
+
+class Notifications(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    notification_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    reference_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    sent_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    def __repr__(self) -> str:
+        return f"<Notifications {self.id} {self.user_id} {self.notification_type} {self.reference_id} {self.sent_at + timedelta(hours=5)} >"
+
     

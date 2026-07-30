@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy import func
 
-from app.db.models import Transaction, Budget, User, UserIdentity
+from app.db.models import Transaction, Budget, User, UserIdentity, Notifications
 
 # PHASE 1 CRUD
 
@@ -286,3 +286,48 @@ async def get_or_create_user(
     await session.refresh(user_identity)
 
     return user
+
+# PHASE 4
+
+async def get_all_users(session: AsyncSession) -> list[User]:
+    stmt = select(User)
+    
+    result = await session.execute(stmt)
+    return list(result.scalars().all())
+
+async def has_notification(
+    session: AsyncSession,
+    user_id: int,
+    notification_type: str,
+    reference_id:  int | None = None
+) -> bool:
+    notif = select(Notifications).where(Notifications.user_id == user_id,
+    Notifications.notification_type == notification_type,   
+    )
+
+    if reference_id is not None:
+        notif = notif.where(Notifications.reference_id == reference_id)
+
+    result = await session.execute(notif)
+    found = result.scalar_one_or_none()
+    if found:
+        return True
+    else:
+        return False
+
+async def create_notification(
+    session: AsyncSession,
+    user_id: int,
+    notification_type: str,
+    reference_id:  int | None = None
+) -> Notifications:
+    notif = Notifications(
+        user_id=user_id,
+        notification_type=notification_type,
+        reference_id=reference_id
+    )
+
+    session.add(notif)
+    await session.commit()
+    await session.refresh(notif)
+    return notif
