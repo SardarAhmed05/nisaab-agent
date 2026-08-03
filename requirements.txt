@@ -17,3 +17,4 @@ langgraph
 chromadb
 sentence-transformers
 tavily-python
+email-validator
