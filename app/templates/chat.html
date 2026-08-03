@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nisaab • Chat</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+
+<body class="chat-page">
+
+<div class="chat-header">
+
+    <h1 class="wordmark-sm">Nisaab</h1>
+
+    <a href="/dashboard" class="back-link">← Dashboard</a>
+
+</div>
+
+
+<div id="messages" class="messages">
+
+    <div class="bot message">
+        Hello! I am Nisaab. How can I help?
+    </div>
+
+</div>
+
+
+<div class="input-bar">
+
+    <div class="input-area">
+
+        <input
+            id="message"
+            placeholder="Ask Nisaab..."
+        >
+
+        <button onclick="sendMessage()">
+            Send
+        </button>
+
+    </div>
+
+</div>
+
+
+<script src="/static/app.js"></script>
+
+</body>
+
+</html>

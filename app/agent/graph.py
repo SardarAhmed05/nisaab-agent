@@ -26,8 +26,12 @@ RISKY_TOOLS = ["delete_transaction", "update_transaction", "delete_budget", "upd
 llm_with_tools = llm.bind_tools(tools)
 
 async def resolve_user_node(state: AgentState):
+    if state.get("user_id") is not None:
+        return {"user_id": state["user_id"]}
+
     async with AsyncSessionLocal() as session:
         user = await get_or_create_user(session, state["platform"], state["platform_id"])
+        
     return {"user_id": user.id}
 
 async def agent_node(state: AgentState) -> dict:

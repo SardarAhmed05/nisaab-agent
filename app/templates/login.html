@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nisaab • Login</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1 class="wordmark">Nisaab</h1>
+        <p class="tagline">Know exactly where you stand.</p>
+
+        <input id="email" type="email" placeholder="Email">
+
+        <input id="password" type="password" placeholder="Password">
+
+        <button onclick="login()">
+            Log in
+        </button>
+
+        <p id="error" class="error"></p>
+
+        <p>
+            Don't have an account?
+            <a href="/signup">
+                Sign up
+            </a>
+        </p>
+
+    </div>
+
+</div>
+
+<script src="/static/app.js"></script>
+
+</body>
+</html>

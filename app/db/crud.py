@@ -88,6 +88,27 @@ async def get_total_expenses(
     expense = (await session.execute(expense_sum)).scalar() or 0.0
     return expense
 
+async def get_total_income(
+    session: AsyncSession,
+    user_id: int,
+    category: str | None = None,
+    date_from: date_type | None = None,
+    date_to: date_type | None = None,
+) -> float:
+    income_sum = select(func.sum(Transaction.amount)).where(Transaction.user_id==user_id)
+    income_sum = income_sum.where(Transaction.type == "income")
+    
+    if category:
+        income_sum = income_sum.where(Transaction.category == category)
+    if date_from:
+        income_sum = income_sum.where(Transaction.date >= date_from)
+    if date_to:
+        income_sum = income_sum.where(Transaction.date <= date_to)
+
+    income = (await session.execute(income_sum)).scalar() or 0.0
+    return income
+
+
 async def get_transaction_by_id(
     session: AsyncSession,
     user_id: int,
@@ -146,6 +167,22 @@ async def get_category_summary (
     result = await session.execute(stmt)
     rows = result.all()
     return dict(rows)
+
+async def get_analytics_summary(
+    session: AsyncSession,
+    user_id: int,
+) -> dict:
+    balance = await get_balance(session, user_id)
+    income = await get_total_income(session, user_id)
+    expenses = await get_total_expenses(session, user_id)
+    category_breakdown = await get_category_summary(session, user_id, type="expense")
+
+    return {
+        "balance": balance,
+        "income": income,
+        "expenses": expenses,
+        "category_breakdown": category_breakdown,
+    }
 
 # PHASE 3
 

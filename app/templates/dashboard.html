@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nisaab Dashboard</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+
+<body>
+
+
+<div class="dashboard">
+
+<h1 class="wordmark-sm">Nisaab</h1>
+
+<div class="card">
+
+    <h3 id="welcome">Loading...</h3>
+    <p id="email"></p>
+
+</div>
+
+<div class="card">
+
+    <h3>Current Balance</h3>
+
+    <span id="balance">Loading...</span>
+
+</div>
+
+<div class="card">
+
+    <h3>Income</h3>
+
+    <span id="income">Loading...</span>
+
+</div>
+
+<div class="card">
+
+    <h3>Expenses</h3>
+
+    <span id="expenses">Loading...</span>
+
+</div>
+
+<div class="card">
+
+    <h3>Spending by Category</h3>
+
+    <div id="category-breakdown">Loading...</div>
+
+</div>
+
+<div class="card">
+
+    <h3>Recent Transactions</h3>
+
+    <div id="transactions">Loading...</div>
+
+</div>
+
+
+<button onclick="openChat()">Chat with Nisaab</button>
+
+<button onclick="logout()">Logout</button>
+
+
+</div>
+
+
+<script src="/static/app.js"></script>
+
+<script>
+loadDashboard();
+</script>
+
+
+</body>
+
+</html>

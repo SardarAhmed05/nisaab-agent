@@ -1,0 +1,533 @@
+/* ============================================
+   NISAAB — Design tokens & foundation
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root {
+    --ink: #0F1512;
+    --surface: #182620;
+    --surface-raised: #1F3129;
+    --hairline: #2C4438;
+
+    --text: #F5F1E8;
+    --text-muted: #9BAFA0;
+    --text-faint: #63756A;
+
+    --marigold: #F2A93B;
+    --marigold-dim: #C98A2A;
+    --marigold-bright: #FFC062;
+    --emerald: #3FBF8F;
+    --coral: #F0665B;
+
+    --radius: 12px;
+    --radius-sm: 8px;
+
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-body);
+    background: var(--ink);
+    background-image: radial-gradient(circle at 15% 0%, rgba(242, 169, 59, 0.06), transparent 45%);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.01em;
+}
+
+h1 { font-size: 28px; }
+h2 { font-size: 20px; font-weight: 500; }
+h3 {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+}
+
+p {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+a {
+    color: var(--marigold);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ============================================
+   Login / Signup — centered card
+   ============================================ */
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    padding: 40px;
+    width: 100%;
+    max-width: 380px;
+    border-radius: var(--radius);
+    box-shadow: 0 0 0 1px rgba(242, 169, 59, 0.04), 0 20px 60px -20px rgba(242, 169, 59, 0.15);
+}
+
+.wordmark {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+    font-size: 34px;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.01em;
+}
+
+.tagline {
+    font-size: 14px;
+    margin-bottom: 28px;
+}
+
+.card h1 {
+    margin-bottom: 24px;
+}
+
+input {
+    width: 100%;
+    padding: 13px 14px;
+    margin: 0 0 14px 0;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--hairline);
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    transition: border-color 0.15s ease;
+}
+
+input::placeholder {
+    color: var(--text-faint);
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--marigold-dim);
+}
+
+input:focus-visible {
+    outline: 2px solid var(--marigold);
+    outline-offset: 2px;
+}
+
+button {
+    width: 100%;
+    padding: 13px;
+    margin-top: 12px;
+    background: var(--marigold);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 15px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+button:hover {
+    background: var(--marigold-bright);
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+button:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.card p {
+    margin-top: 20px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.card .error {
+    color: var(--coral);
+    font-size: 13px;
+    margin-top: 10px;
+    min-height: 0;
+}
+
+.card .field-error {
+    color: var(--coral);
+    font-size: 12.5px;
+    margin: -8px 0 10px 0;
+    min-height: 13px;
+    line-height: 13px;
+}
+
+/* ============================================
+   Dashboard
+   ============================================ */
+
+.dashboard {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 40px 24px 80px 24px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.dashboard > h1 {
+    grid-column: 1 / -1;
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.dashboard .card {
+    max-width: none;
+    width: auto;
+    padding: 24px;
+    margin: 0;
+}
+
+.dashboard .card:nth-of-type(1),
+.dashboard .card:nth-of-type(2) {
+    grid-column: 1 / -1;
+}
+
+/* Welcome card — avatar + greeting, no more dead center space */
+.welcome-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.avatar {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--marigold), var(--marigold-dim));
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcome-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+#welcome {
+    font-size: 17px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text);
+    margin: 0 0 4px 0;
+}
+
+#email {
+    font-size: 13px;
+    color: var(--text-faint);
+    margin: 0;
+}
+
+/* Signature element: ledger double-rule under the balance total */
+#balance {
+    font-family: var(--font-mono);
+    font-size: 38px;
+    font-weight: 600;
+    color: var(--text);
+    display: inline-block;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--text);
+    position: relative;
+}
+
+#balance::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    height: 1px;
+    background: var(--text);
+}
+
+#income {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--emerald);
+}
+
+#expenses {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--coral);
+}
+
+#category-breakdown,
+#transactions {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Category rows — living bar showing relative spend */
+.category-row {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.category-row:last-child {
+    border-bottom: none;
+}
+
+.category-row-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.category-row-top .cat-name {
+    text-transform: capitalize;
+    color: var(--text);
+}
+
+.category-row-top .cat-amount {
+    font-family: var(--font-mono);
+    color: var(--coral);
+}
+
+.category-bar-track {
+    height: 5px;
+    background: var(--hairline);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.category-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--marigold-dim), var(--coral));
+    border-radius: 3px;
+}
+
+/* Transaction rows — color-coded, alive */
+.txn-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.txn-row:last-child {
+    border-bottom: none;
+}
+
+.txn-dot {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.txn-dot.income { background: var(--emerald); }
+.txn-dot.expense { background: var(--coral); }
+
+.txn-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.txn-category {
+    font-size: 14px;
+    text-transform: capitalize;
+    color: var(--text);
+}
+
+.txn-meta {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 2px;
+}
+
+.txn-amount {
+    font-family: var(--font-mono);
+    font-size: 14.5px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.txn-amount.income { color: var(--emerald); }
+.txn-amount.expense { color: var(--coral); }
+
+.dashboard button {
+    grid-column: 1 / -1;
+    margin-top: 0;
+}
+
+/* ============================================
+   Chat — full page, Claude-style layout
+   ============================================ */
+
+body.chat-page {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-page .chat-header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 20px 24px;
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.chat-page .back-link {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.chat-page .back-link:hover {
+    color: var(--marigold);
+}
+
+.messages {
+    flex: 1;
+    overflow-y: auto;
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 24px 24px 24px;
+}
+
+.message {
+    font-size: 15px;
+    line-height: 1.65;
+    margin: 0 0 24px 0;
+    max-width: 100%;
+}
+
+.bot {
+    color: var(--text);
+    padding: 0;
+    background: none;
+    border-radius: 0;
+}
+
+.user {
+    color: var(--ink);
+    background: var(--marigold);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    margin-left: auto;
+    margin-bottom: 24px;
+    max-width: 70%;
+    width: fit-content;
+    font-weight: 500;
+}
+
+.input-bar {
+    flex-shrink: 0;
+    padding: 16px 24px 24px 24px;
+    max-width: 720px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.input-area {
+    display: flex;
+    gap: 10px;
+}
+
+.input-area input {
+    flex: 1;
+    margin: 0;
+}
+
+.input-area button {
+    width: 100px;
+    margin-top: 0;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 640px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+        padding: 24px 16px 60px 16px;
+    }
+
+    #balance {
+        font-size: 30px;
+    }
+
+    .card {
+        padding: 28px 20px;
+    }
+
+    .chat-container {
+        margin: 20px auto;
+        padding: 0 16px;
+    }
+
+    .messages {
+        height: 65vh;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}

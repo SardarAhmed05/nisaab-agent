@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nisaab • Sign up</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1 class="wordmark">Nisaab</h1>
+        <p class="tagline">Create your account.</p>
+
+        <input
+            id="username"
+            type="text"
+            placeholder="Username"
+        >
+        <p id="username-error" class="field-error"></p>
+
+        <input
+            id="signup-email"
+            type="email"
+            placeholder="Email"
+        >
+        <p id="email-error" class="field-error"></p>
+
+        <input
+            id="signup-password"
+            type="password"
+            placeholder="Password"
+        >
+        <p id="password-error" class="field-error"></p>
+
+        <button onclick="signup()">
+            Sign up
+        </button>
+
+        <p id="signup-error" class="error"></p>
+
+        <p>
+            Already have an account?
+            <a href="/">
+                Log in
+            </a>
+        </p>
+
+    </div>
+
+</div>
+
+<script src="/static/app.js"></script>
+
+</body>
+
+</html>
