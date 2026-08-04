@@ -18,3 +18,5 @@ chromadb
 sentence-transformers
 tavily-python
 email-validator
+asyncpg
+python-dotenv

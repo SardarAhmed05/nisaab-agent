@@ -7,6 +7,11 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from app.db.models import Base
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -22,7 +27,10 @@ target_metadata = Base.metadata
 
 # Set the DB URL directly here rather than relying on alembic.ini,
 # so there's one source of truth for the connection string.
-config.set_main_option("sqlalchemy.url", "sqlite+aiosqlite:///./app/db/finance.db")
+config.set_main_option(
+    "sqlalchemy.url",
+    os.getenv("DATABASE_URL")
+)
 
 
 def run_migrations_offline() -> None:
