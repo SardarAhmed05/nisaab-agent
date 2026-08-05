@@ -183,7 +183,7 @@ async function loadDashboard(){
     `Welcome, ${user.username}`;
 
 
-    document.getElementById("email")
+    document.getElementById("user-email")
     .innerText =
     user.email;
 

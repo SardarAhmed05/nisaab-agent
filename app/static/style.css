@@ -260,7 +260,7 @@ button:focus-visible {
     margin: 0 0 4px 0;
 }
 
-#email {
+#user-email {
     font-size: 13px;
     color: var(--text-faint);
     margin: 0;
