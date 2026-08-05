@@ -1,7 +1,7 @@
 async function login() {
 
 
-    const email =
+    const identifier =
         document.getElementById("email").value;
 
 
@@ -20,7 +20,7 @@ async function login() {
             },
 
             body: JSON.stringify({
-                email,
+                identifier,
                 password
             })
         }

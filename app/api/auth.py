@@ -77,7 +77,8 @@ async def login(
 
     result = await session.execute(
         select(User).where(
-            User.email == request.email
+            (User.email == request.identifier) |
+            (User.username == request.identifier)
         )
     )
 
@@ -87,7 +88,7 @@ async def login(
     if user is None:
         raise HTTPException(
             status_code=401,
-            detail="Invalid email or password"
+            detail="Invalid email/username or password"
         )
 
 
@@ -97,7 +98,7 @@ async def login(
     ):
         raise HTTPException(
             status_code=401,
-            detail="Invalid email or password"
+            detail="Invalid email/username or password"
         )
 
 

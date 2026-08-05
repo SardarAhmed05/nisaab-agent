@@ -7,16 +7,12 @@ python-dotenv
 pydantic
 pydantic-settings
 passlib
-bcrypt
+bcrypt==4.0.1
 python-jose
 python-multipart
 groq
 langchain
 langchain-groq
 langgraph
-chromadb
-sentence-transformers
-tavily-python
 email-validator
 asyncpg
-python-dotenv
