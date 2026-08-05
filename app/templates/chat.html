@@ -44,6 +44,7 @@
         <input
             id="message"
             placeholder="Ask Nisaab..."
+            onkeydown="if(event.key === 'Enter') sendMessage()"
         >
 
         <button onclick="sendMessage()">
