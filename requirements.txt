@@ -16,3 +16,4 @@ langchain-groq
 langgraph
 email-validator
 asyncpg
+jinja2
