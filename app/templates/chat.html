@@ -60,16 +60,15 @@
 
     <div class="input-area">
 
-        <input
+        <textarea
             id="message"
             placeholder="Ask Nisaab..."
-            onkeydown="if(event.key === 'Enter') sendMessage()"
-        >
+        ></textarea>
 
-        <button aria-label="Send">
+        <button id="send-btn" onclick="sendMessage()" aria-label="Send">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M5 12L19 5L12 19L11 13L5 12Z"
-                fill="currentColor"/>
+                    fill="currentColor"/>
             </svg>
         </button>
     </div>

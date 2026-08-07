@@ -62,19 +62,48 @@ async function login() {
 
 }
 
-async function sendMessage(){
+const messageBox = document.getElementById("message");
+
+if(messageBox){
+
+    messageBox.addEventListener("input", () => {
+
+        messageBox.style.height = "42px";
+
+        messageBox.style.height =
+            Math.min(messageBox.scrollHeight, 150) + "px";
+
+    });
+
+}
 
 
-    const input =
-        document.getElementById("message");
+    messageBox.addEventListener("keydown", function(event){
 
+        if(event.key === "Enter" && !event.shiftKey){
 
-    const text = input.value;
+            event.preventDefault();
 
+            sendMessage();
 
-    if(!text)
+        }
+
+    });
+
+async function sendMessage() {
+
+    const input = document.getElementById("message");
+    const sendBtn = document.getElementById("send-btn");
+
+    const text = input.value.trim();
+
+    if (!text)
         return;
 
+
+    // Disable sending while AI responds
+    if (sendBtn)
+        sendBtn.disabled = true;
 
 
     addMessage(
@@ -83,8 +112,8 @@ async function sendMessage(){
     );
 
 
-    input.value="";
-
+    input.value = "";
+    input.style.height = "auto";
 
     showTypingIndicator();
 
@@ -93,48 +122,70 @@ async function sendMessage(){
         localStorage.getItem("token");
 
 
+    try {
 
-    const response = await fetch(
-        "/api/chat",
-        {
+        const response = await fetch(
+            "/api/chat",
+            {
 
-            method:"POST",
+                method: "POST",
 
-            headers:{
+                headers: {
 
-                "Content-Type":"application/json",
+                    "Content-Type": "application/json",
 
-                "Authorization":
-                    `Bearer ${token}`
+                    "Authorization":
+                        `Bearer ${token}`
 
-            },
-
-
-            body:JSON.stringify({
-
-                message:text
-
-            })
-
-        }
-    );
+                },
 
 
+                body: JSON.stringify({
 
-    const data =
-        await response.json();
+                    message: text
+
+                })
+
+            }
+        );
 
 
-    hideTypingIndicator();
+        const data =
+            await response.json();
 
 
-    addMessage(
-        data.response,
-        "bot"
-    );
+        hideTypingIndicator();
+
+
+        addMessage(
+            data.response,
+            "bot"
+        );
+
+
+    } catch(error) {
+
+        hideTypingIndicator();
+
+        addMessage(
+            "Sorry, something went wrong. Please try again.",
+            "bot"
+        );
+
+        console.error(error);
+
+    }
+
+
+    // Enable sending again
+    if (sendBtn)
+        sendBtn.disabled = false;
+
+
+    // Keep typing ready
+    input.focus();
 
 }
-
 
 function showTypingIndicator(){
 
@@ -628,3 +679,4 @@ async function loadAllTransactions(){
     }
 
 }
+
