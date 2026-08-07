@@ -1,3 +1,13 @@
+function requireAuth(){
+
+    const token = localStorage.getItem("token");
+
+    if(!token){
+        window.location.href = "/";
+    }
+
+}
+
 async function login() {
 
 
@@ -467,73 +477,153 @@ async function signup(){
     }
 }
 
-function togglePassword(inputId, button){
+function togglePassword(id, button) {
 
-    const input =
-        document.getElementById(inputId);
+    const input = document.getElementById(id);
 
-    if(input.type === "password"){
+    if (input.type === "password") {
+
         input.type = "text";
-        button.innerText = "🙈";
-    }
-    else{
+
+        button.innerHTML = `
+        <svg 
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M1 1l22 22"/>
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+        </svg>`;
+
+    } else {
+
         input.type = "password";
-        button.innerText = "👁";
+
+        button.innerHTML = `
+        <svg 
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/>
+            <circle cx="12" cy="12" r="3"/>
+        </svg>`;
+
     }
 
 }
 
 async function loadAllTransactions(){
 
-    const token =
-        localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-    const txnResponse =
-        await fetch(
+    const box = document.getElementById("all-transactions");
+
+    try {
+
+        const txnResponse = await fetch(
             "/api/transactions?limit=1000",
             {
                 headers:{
-                    "Authorization":
-                    `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`
                 }
             }
         );
 
-    const transactions =
-        await txnResponse.json();
+        const transactions = await txnResponse.json();
 
-    const box =
-        document.getElementById("all-transactions");
+        box.innerHTML = "";
 
-    box.innerHTML="";
+        let totalIncome = 0;
+        let totalExpenses = 0;
 
-    if(transactions.length === 0){
 
-        box.innerText = "No transactions yet";
+        if(transactions.length === 0){
 
-    }
-
-    else{
-
-        transactions.forEach(txn=>{
-
-            const row = document.createElement("div");
-            row.className = "txn-row";
-
-            const sign = txn.type === "income" ? "+" : "-";
-
-            row.innerHTML = `
-                <div class="txn-dot ${txn.type}"></div>
-                <div class="txn-details">
-                    <div class="txn-category">${txn.category}</div>
-                    <div class="txn-meta">${txn.date} · ${txn.description}</div>
+            box.innerHTML = `
+                <div class="empty-state">
+                    No transactions yet
                 </div>
-                <div class="txn-amount ${txn.type}">${sign}₨ ${txn.amount.toLocaleString()}</div>
             `;
 
-            box.appendChild(row);
+        }
 
-        });
+        else{
+
+            transactions.forEach(txn => {
+
+                const amount = Number(txn.amount);
+
+                if(txn.type === "income"){
+                    totalIncome += amount;
+                }
+                else{
+                    totalExpenses += amount;
+                }
+
+
+                const row = document.createElement("div");
+
+                row.className = "txn-row";
+
+
+                const sign = txn.type === "income" ? "+" : "-";
+
+
+                row.innerHTML = `
+                    <div class="txn-dot ${txn.type}"></div>
+
+                    <div class="txn-details">
+                        <div class="txn-category">
+                            ${txn.category}
+                        </div>
+
+                        <div class="txn-meta">
+                            ${txn.date} · ${txn.description}
+                        </div>
+                    </div>
+
+                    <div class="txn-amount ${txn.type}">
+                        ${sign}₨ ${amount.toLocaleString()}
+                    </div>
+                `;
+
+
+                box.appendChild(row);
+
+            });
+
+        }
+
+
+        // Update summary cards if they exist
+        const incomeElement = document.getElementById("total-income");
+        const expenseElement = document.getElementById("total-expenses");
+
+
+        if(incomeElement){
+            incomeElement.innerText =
+                `₨ ${totalIncome.toLocaleString()}`;
+        }
+
+
+        if(expenseElement){
+            expenseElement.innerText =
+                `₨ ${totalExpenses.toLocaleString()}`;
+        }
+
+
+    } catch(error){
+
+        console.error("Failed to load transactions:", error);
+
+        box.innerText =
+            "Unable to load transactions";
 
     }
 

@@ -16,55 +16,146 @@
     <link rel="manifest" href="/static/site.webmanifest" />
 </head>
 
-<body>
+<body class="auth-page">
 
-<div class="container">
+<div class="auth-layout">
 
-    <div class="card">
+    <section class="auth-brand">
 
-        <h1 class="wordmark">Nisaab</h1>
-        <p class="tagline">Create your account.</p>
+        <h1 class="brand-name">
+            Nisaab
+        </h1>
 
-        <input
-            id="username"
-            type="text"
-            placeholder="Username"
-        >
-        <p id="username-error" class="field-error"></p>
-
-        <input
-            id="signup-email"
-            type="email"
-            placeholder="Email"
-        >
-        <p id="email-error" class="field-error"></p>
-
-        <div class="password-wrapper">
-            <input
-                id="signup-password"
-                type="password"
-                placeholder="Password"
-            >
-            <button type="button" class="toggle-password" onclick="togglePassword('signup-password', this)">👁</button>
-        </div>
-        <p id="password-error" class="field-error"></p>
-
-        <button onclick="signup()">
-            Sign up
-        </button>
-
-        <p id="signup-error" class="error"></p>
-
-        <p>
-            Already have an account?
-            <a href="/">
-                Log in
-            </a>
+        <p class="brand-description">
+            Take control of your money with simple tracking,
+            intelligent insights, and a clearer financial future.
         </p>
 
-    </div>
+        <div class="brand-points">
+
+            <div>
+                <span>✓</span>
+                Track income and expenses
+            </div>
+
+            <div>
+                <span>✓</span>
+                Understand your spending
+            </div>
+
+            <div>
+                <span>✓</span>
+                Make better financial decisions
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section class="auth-container">
+
+        <div class="auth-card">
+
+            <p class="auth-eyebrow">
+                Get started
+            </p>
+
+            <h2>
+                Create account
+            </h2>
+
+            <p class="auth-subtitle">
+                Start managing your finances today.
+            </p>
+
+
+            <label for="username">
+                Username
+            </label>
+
+            <input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+            >
+
+            <p id="username-error" class="field-error"></p>
+
+
+            <label for="signup-email">
+                Email
+            </label>
+
+            <input
+                id="signup-email"
+                type="email"
+                placeholder="Enter your email"
+            >
+
+            <p id="email-error" class="field-error"></p>
+
+
+            <label for="signup-password">
+                Password
+            </label>
+
+            <div class="password-wrapper">
+
+                <input
+                    id="signup-password"
+                    type="password"
+                    placeholder="Create a password"
+                >
+
+                <button 
+                    type="button"
+                    class="toggle-password"
+                    onclick="togglePassword('signup-password', this)"
+                >
+                    <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="18" 
+                        height="18" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                    >
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+
+            </div>
+
+            <p id="password-error" class="field-error"></p>
+
+
+            <button onclick="signup()">
+                Create account
+            </button>
+
+
+            <p id="signup-error" class="error"></p>
+
+
+            <p class="auth-footer">
+                Already have an account?
+                <a href="/">
+                    Log in
+                </a>
+            </p>
+
+
+        </div>
+
+    </section>
 
 </div>
+
 
 <script src="/static/app.js"></script>
 

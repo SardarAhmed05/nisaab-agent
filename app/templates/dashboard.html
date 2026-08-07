@@ -17,64 +17,125 @@
 </head>
 
 
-<body>
-
+<body class="dashboard-page">
 
 <div class="dashboard">
 
-<h1 class="wordmark-sm">Nisaab</h1>
+    <div class="dashboard-header">
 
-<div class="card">
+        <div>
+            <p class="dashboard-label">
+                Financial overview
+            </p>
 
-    <h3 id="welcome">Loading...</h3>
-    <p id="user-email"></p>
-
-</div>
-
-<div class="card">
-
-    <h3>Current Balance</h3>
-
-    <span id="balance">Loading...</span>
-
-</div>
-
-<div class="card">
-
-    <h3>Income</h3>
-
-    <span id="income">Loading...</span>
-
-</div>
-
-<div class="card">
-
-    <h3>Expenses</h3>
-
-    <span id="expenses">Loading...</span>
-
-</div>
-
-<div class="card">
-
-    <h3>Spending by Category</h3>
-
-    <div id="category-breakdown">Loading...</div>
-
-</div>
-
-<div class="card">
-
-    <h3>Recent Transactions</h3>
-
-    <div id="transactions">Loading...</div>
-
-</div>
+            <h1 class="wordmark-sm">
+                Nisaab
+            </h1>
+        </div>
 
 
-<button onclick="openChat()">Chat with Nisaab</button>
+        <button class="logout-btn" onclick="logout()">
+            Logout
+        </button>
 
-<button onclick="logout()">Logout</button>
+    </div>
+
+
+    <section class="welcome-card">
+
+        <div class="avatar">
+            N
+        </div>
+
+        <div class="welcome-text">
+
+            <h3 id="welcome">
+                Loading...
+            </h3>
+
+            <p id="user-email"></p>
+
+        </div>
+
+    </section>
+
+
+    <section class="balance-card">
+
+        <p class="dashboard-label">
+            Current balance
+        </p>
+
+        <span id="balance">
+            Loading...
+        </span>
+
+    </section>
+
+
+    <div class="summary-grid">
+
+
+        <section class="finance-card">
+
+            <p class="dashboard-label">
+                Income
+            </p>
+
+            <span id="income">
+                Loading...
+            </span>
+
+        </section>
+
+
+        <section class="finance-card">
+
+            <p class="dashboard-label">
+                Expenses
+            </p>
+
+            <span id="expenses">
+                Loading...
+            </span>
+
+        </section>
+
+
+    </div>
+
+
+    <section class="finance-card">
+
+        <h3>
+            Spending by Category
+        </h3>
+
+        <div id="category-breakdown">
+            Loading...
+        </div>
+
+    </section>
+
+
+
+    <section class="finance-card">
+
+        <h3>
+            Recent Transactions
+        </h3>
+
+        <div id="transactions">
+            Loading...
+        </div>
+
+    </section>
+
+
+
+    <button class="chat-btn" onclick="openChat()">
+        Chat with Nisaab
+    </button>
 
 
 </div>
@@ -83,9 +144,9 @@
 <script src="/static/app.js"></script>
 
 <script>
+requireAuth();
 loadDashboard();
 </script>
-
 
 </body>
 

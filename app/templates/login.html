@@ -8,6 +8,7 @@
     <title>Nisaab • Login</title>
 
     <link rel="stylesheet" href="/static/style.css">
+
     <link rel="icon" type="image/png" href="/static/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <link rel="shortcut icon" href="/static/favicon.ico" />
@@ -16,40 +17,133 @@
     <link rel="manifest" href="/static/site.webmanifest" />
 </head>
 
-<body>
+<body class="auth-page">
 
-<div class="container">
+    <main class="auth-layout">
 
-    <div class="card">
+        <section class="auth-brand">
 
-        <h1 class="wordmark">Nisaab</h1>
-        <p class="tagline">Know exactly where you stand.</p>
+            <h1 class="brand-name">
+                Nisaab
+            </h1>
 
-        <input id="email" type="email" placeholder="Email or username">
+            <p class="brand-description">
+                Take control of your finances with clarity.
+                Track expenses, understand spending,
+                and make smarter decisions.
+            </p>
 
-        <div class="password-wrapper">
-            <input id="password" type="password" placeholder="Password">
-            <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
-        </div>
+            <div class="brand-points">
 
-        <button onclick="login()">
-            Log in
-        </button>
+                <div>
+                    <span>✓</span>
+                    Smart expense tracking
+                </div>
 
-        <p id="error" class="error"></p>
+                <div>
+                    <span>✓</span>
+                    AI-powered financial assistant
+                </div>
 
-        <p>
-            Don't have an account?
-            <a href="/signup">
-                Sign up
-            </a>
-        </p>
+                <div>
+                    <span>✓</span>
+                    Clear money insights
+                </div>
 
-    </div>
+            </div>
 
-</div>
+        </section>
 
-<script src="/static/app.js"></script>
+
+        <section class="auth-container">
+
+            <div class="auth-card">
+
+                <p class="auth-eyebrow">
+                    Welcome back
+                </p>
+
+                <h2>
+                    Sign in to Nisaab
+                </h2>
+
+                <p class="auth-subtitle">
+                    Continue managing your finances.
+                </p>
+
+
+                <label for="email">
+                    Email or username
+                </label>
+
+                <input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                >
+
+
+                <label for="password">
+                    Password
+                </label>
+
+                <div class="password-wrapper">
+
+                    <input
+                        id="password"
+                        type="password"
+                        placeholder="Enter your password"
+                    >
+
+                    <button 
+                        type="button"
+                        class="toggle-password"
+                        onclick="togglePassword('password', this)"
+                    >
+                        <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="18" 
+                            height="18" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            stroke-width="2" 
+                            stroke-linecap="round" 
+                            stroke-linejoin="round"
+                        >
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+
+                </div>
+
+
+                <button onclick="login()">
+                    Log in
+                </button>
+
+
+                <p id="error" class="error"></p>
+
+
+                <p class="auth-footer">
+                    Don't have an account?
+                    <a href="/signup">
+                        Create account
+                    </a>
+                </p>
+
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="/static/app.js"></script>
 
 </body>
+
 </html>

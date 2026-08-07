@@ -21,9 +21,24 @@
 
 <div class="chat-header">
 
-    <h1 class="wordmark-sm">Nisaab</h1>
+    <div class="chat-brand">
 
-    <a href="/dashboard" class="back-link">← Dashboard</a>
+        <div>
+            <h1 class="wordmark-sm">
+                Nisaab
+            </h1>
+
+            <p class="chat-status">
+                AI financial assistant
+            </p>
+        </div>
+
+    </div>
+
+
+    <a href="/dashboard" class="back-link">
+        ← Dashboard
+    </a>
 
 </div>
 
@@ -31,7 +46,11 @@
 <div id="messages" class="messages">
 
     <div class="bot message">
-        Hello! I am Nisaab. How can I help?
+        Welcome back.
+
+        I'm Nisaab, your personal finance assistant.
+        You can ask me about your balance, expenses,
+        transactions, or budgeting.
     </div>
 
 </div>
@@ -47,10 +66,12 @@
             onkeydown="if(event.key === 'Enter') sendMessage()"
         >
 
-        <button onclick="sendMessage()">
-            Send
+        <button aria-label="Send">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12L19 5L12 19L11 13L5 12Z"
+                fill="currentColor"/>
+            </svg>
         </button>
-
     </div>
 
 </div>
