@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nisaab • Transactions</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <link rel="icon" type="image/png" href="/static/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="shortcut icon" href="/static/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Nisaab" />
+    <link rel="manifest" href="/static/site.webmanifest" />
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<div class="page-header">
+    <a href="/dashboard" class="back-link">← Dashboard</a>
+    <h1 class="wordmark-sm">Nisaab</h1>
+</div>
+
+<div class="card full-width">
+
+    <h3>All Transactions</h3>
+
+    <div id="all-transactions">Loading...</div>
+
+</div>
+
+</div>
+
+<script src="/static/app.js"></script>
+
+<script>
+loadAllTransactions();
+</script>
+
+</body>
+
+</html>

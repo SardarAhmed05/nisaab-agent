@@ -111,7 +111,8 @@ Use this tool whenever the user asks about:
     user_id = state["user_id"]
     async with AsyncSessionLocal() as session:
         balance = await crud.get_balance(session, user_id=user_id)
-        return f"Balance: {balance}"
+        display_balance = max(0, balance)
+        return f"Balance: {display_balance}"
     
 # MULTI-STEP AGENTIC REASONING
 @tool

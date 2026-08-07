@@ -39,11 +39,14 @@
         >
         <p id="email-error" class="field-error"></p>
 
-        <input
-            id="signup-password"
-            type="password"
-            placeholder="Password"
-        >
+        <div class="password-wrapper">
+            <input
+                id="signup-password"
+                type="password"
+                placeholder="Password"
+            >
+            <button type="button" class="toggle-password" onclick="togglePassword('signup-password', this)">👁</button>
+        </div>
         <p id="password-error" class="field-error"></p>
 
         <button onclick="signup()">

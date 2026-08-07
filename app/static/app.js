@@ -52,9 +52,6 @@ async function login() {
 
 }
 
-
-
-
 async function sendMessage(){
 
 
@@ -78,6 +75,8 @@ async function sendMessage(){
 
     input.value="";
 
+
+    showTypingIndicator();
 
 
     const token =
@@ -116,6 +115,8 @@ async function sendMessage(){
         await response.json();
 
 
+    hideTypingIndicator();
+
 
     addMessage(
         data.response,
@@ -125,6 +126,40 @@ async function sendMessage(){
 }
 
 
+function showTypingIndicator(){
+
+    const box =
+        document.getElementById("messages");
+
+    const div =
+        document.createElement("div");
+
+    div.className = "bot message typing-indicator";
+    div.id = "typing-indicator";
+
+    div.innerHTML = `
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+    `;
+
+    box.appendChild(div);
+
+    box.scrollTop = box.scrollHeight;
+
+}
+
+
+function hideTypingIndicator(){
+
+    const indicator =
+        document.getElementById("typing-indicator");
+
+    if(indicator){
+        indicator.remove();
+    }
+
+}
 
 
 function addMessage(
@@ -144,8 +179,8 @@ function addMessage(
         `${type} message`;
 
 
-    div.innerText =
-        text;
+    div.innerHTML =
+        formatMessage(text);
 
 
     box.appendChild(div);
@@ -154,6 +189,22 @@ function addMessage(
     box.scrollTop =
         box.scrollHeight;
 
+}
+
+function formatMessage(text) {
+    // Escape HTML first to prevent injection
+    let escaped = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    // Convert **bold** to <strong>
+    escaped = escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+    // Convert line breaks to <br>
+    escaped = escaped.replace(/\n/g, "<br>");
+
+    return escaped;
 }
 
 async function loadDashboard(){
@@ -205,7 +256,7 @@ async function loadDashboard(){
 
     document.getElementById("balance")
     .innerText =
-    `₨ ${analytics.balance.toLocaleString()}`;
+    `₨ ${Math.max(0, analytics.balance).toLocaleString()}`;
 
 
     document.getElementById("income")
@@ -263,7 +314,7 @@ async function loadDashboard(){
 
     const txnResponse =
         await fetch(
-            "/api/transactions",
+            "/api/transactions?limit=5",
             {
                 headers:{
                     "Authorization":
@@ -311,6 +362,12 @@ async function loadDashboard(){
             box.appendChild(row);
 
         });
+
+        const viewAllLink = document.createElement("a");
+            viewAllLink.href = "/transactions";
+            viewAllLink.className = "view-all-link";
+            viewAllLink.innerText = "View all transactions →";
+            box.appendChild(viewAllLink);
 
     }
 
@@ -408,4 +465,76 @@ async function signup(){
         }
 
     }
+}
+
+function togglePassword(inputId, button){
+
+    const input =
+        document.getElementById(inputId);
+
+    if(input.type === "password"){
+        input.type = "text";
+        button.innerText = "🙈";
+    }
+    else{
+        input.type = "password";
+        button.innerText = "👁";
+    }
+
+}
+
+async function loadAllTransactions(){
+
+    const token =
+        localStorage.getItem("token");
+
+    const txnResponse =
+        await fetch(
+            "/api/transactions?limit=1000",
+            {
+                headers:{
+                    "Authorization":
+                    `Bearer ${token}`
+                }
+            }
+        );
+
+    const transactions =
+        await txnResponse.json();
+
+    const box =
+        document.getElementById("all-transactions");
+
+    box.innerHTML="";
+
+    if(transactions.length === 0){
+
+        box.innerText = "No transactions yet";
+
+    }
+
+    else{
+
+        transactions.forEach(txn=>{
+
+            const row = document.createElement("div");
+            row.className = "txn-row";
+
+            const sign = txn.type === "income" ? "+" : "-";
+
+            row.innerHTML = `
+                <div class="txn-dot ${txn.type}"></div>
+                <div class="txn-details">
+                    <div class="txn-category">${txn.category}</div>
+                    <div class="txn-meta">${txn.date} · ${txn.description}</div>
+                </div>
+                <div class="txn-amount ${txn.type}">${sign}₨ ${txn.amount.toLocaleString()}</div>
+            `;
+
+            box.appendChild(row);
+
+        });
+
+    }
+
 }

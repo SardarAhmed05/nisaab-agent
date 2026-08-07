@@ -27,7 +27,10 @@
 
         <input id="email" type="email" placeholder="Email or username">
 
-        <input id="password" type="password" placeholder="Password">
+        <div class="password-wrapper">
+            <input id="password" type="password" placeholder="Password">
+            <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
+        </div>
 
         <button onclick="login()">
             Log in

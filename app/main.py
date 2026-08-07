@@ -85,3 +85,9 @@ async def signup_page(request: Request):
         name="signup.html"
     )
 
+@app.get("/transactions")
+async def transactions_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="transactions.html"
+)
