@@ -200,13 +200,13 @@ Keep tracking your spending — you’re building better financial habits every 
 
 — Nisaab
         """
-    if user.email:
-            send_email(user.email, subject=f"Your Weekly Financial Summary", body=message)
-            await create_notification(
-                session,
-                user_id=user.id,
-                notification_type=notification_type,
-                )
+        if user.email:
+                send_email(user.email, subject=f"Your Weekly Financial Summary", body=message)
+                await create_notification(
+                    session,
+                    user_id=user.id,
+                    notification_type=notification_type,
+                    )
 
 
 asyncio.run(run_daily_check())
