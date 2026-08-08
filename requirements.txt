@@ -17,3 +17,4 @@ langgraph
 email-validator
 asyncpg
 jinja2
+langchain_openai
