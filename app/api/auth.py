@@ -112,14 +112,10 @@ async def login(
         else "unknown"
     )
 
-    identifier = request.identifier.strip().lower()
-
     ip_key = f"ip:{client_ip}"
-    identifier_key = f"identifier:{identifier}"
 
     if (
         is_login_blocked(ip_key)
-        or is_login_blocked(identifier_key)
     ):
         raise HTTPException(
             status_code=429,
@@ -138,8 +134,7 @@ async def login(
 
     if user is None:
         record_failed_login(ip_key)
-        record_failed_login(identifier_key)
-
+        
         raise HTTPException(
             status_code=401,
             detail="Invalid email/username or password"
@@ -151,14 +146,12 @@ async def login(
         user.password_hash
     ):
         record_failed_login(ip_key)
-        record_failed_login(identifier_key)
 
         raise HTTPException(
             status_code=401,
             detail="Invalid email/username or password"
         )
     
-    clear_login_attempts(identifier_key)
     clear_login_attempts(ip_key)
 
     token = create_access_token(
