@@ -1,11 +1,39 @@
-function requireAuth(){
+async function requireAuth() {
 
     const token = localStorage.getItem("token");
 
-    if(!token){
+    if (!token) {
         window.location.href = "/";
+        return;
     }
 
+    try {
+
+        const response = await fetch(
+            "/api/me",
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+
+            localStorage.removeItem("token");
+            window.location.href = "/";
+            return;
+
+        }
+
+    } catch (error) {
+
+        console.error("Authentication check failed:", error);
+
+        localStorage.removeItem("token");
+        window.location.href = "/";
+
+    }
 }
 
 async function login() {
@@ -75,9 +103,6 @@ if(messageBox){
 
     });
 
-}
-
-
     messageBox.addEventListener("keydown", function(event){
 
         if(event.key === "Enter" && !event.shiftKey){
@@ -89,6 +114,8 @@ if(messageBox){
         }
 
     });
+
+}
 
 async function sendMessage() {
 
@@ -680,3 +707,10 @@ async function loadAllTransactions(){
 
 }
 
+if (
+    window.location.pathname === "/dashboard" ||
+    window.location.pathname === "/chat" ||
+    window.location.pathname === "/transactions"
+) {
+    requireAuth();
+}

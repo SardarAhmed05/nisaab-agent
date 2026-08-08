@@ -1,10 +1,8 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date, datetime
-from pydantic import BaseModel
 
 class ChatRequest(BaseModel):
-    message: str
-
+    message: str = Field(..., min_length=1, max_length=4000)
 
 class ChatResponse(BaseModel):
     response: str
