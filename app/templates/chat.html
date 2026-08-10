@@ -28,6 +28,57 @@
 
 <body class="chat-page">
 
+<aside class="chat-sidebar">
+
+    <div class="chat-sidebar-header">
+
+        <span class="chat-sidebar-brand">
+            Nisaab
+        </span>
+
+        <button
+            id="chat-history-toggle"
+            class="chat-history-toggle"
+            type="button"
+            aria-label="Close chat history"
+            aria-expanded="true"
+        >
+            ×
+        </button>
+
+    </div>
+
+    <button
+        class="new-chat-btn"
+        type="button"
+        onclick="createNewChat()"
+    >
+        New chat
+    </button>
+
+    <p class="sidebar-section-title">
+        Recents
+    </p>
+
+    <div
+        id="conversation-list"
+        class="conversation-list"
+        aria-label="Previous chats">
+    </div>
+
+</aside>
+
+<button
+    id="chat-history-open"
+    class="chat-history-open"
+    type="button"
+    aria-label="Open chat history"
+    aria-expanded="false"
+>
+    ☰
+</button>
+
+<main class="chat-main">
 <div class="chat-header">
 
     <div class="chat-brand">
@@ -53,15 +104,6 @@
 
 
 <div id="messages" class="messages">
-
-    <div class="bot message">
-        Welcome back.
-
-        I'm Nisaab, your personal finance assistant.
-        You can ask me about your balance, expenses,
-        transactions, or budgeting.
-    </div>
-
 </div>
 
 
@@ -83,6 +125,7 @@
     </div>
 
 </div>
+</main>
 
 
 <script src="/static/app.js"></script>

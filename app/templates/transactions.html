@@ -4,14 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5L123LXQ6Y"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5L123LXQ6Q"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
 
-        gtag('config', 'G-5L123LXQ6Y');
+        gtag('config', 'G-5L123LXQ6Q');
     </script>
 
     <title>Nisaab • Transactions</title>
@@ -26,31 +27,45 @@
     <link rel="manifest" href="/static/site.webmanifest" />
 </head>
 
-<body class="dashboard-page">
+<body class="dashboard-page transactions-page">
 
-<div class="dashboard">
+    <main class="dashboard">
 
-<div class="page-header">
-    <h1 class="wordmark-sm">Nisaab</h1>
-    <a href="/dashboard" class="back-link">← Dashboard</a>
-</div>
+        <header class="page-header">
+            <div>
+                <p class="dashboard-label">Financial activity</p>
+                <h1 class="wordmark-sm">Transactions</h1>
+            </div>
 
-<div class="card full-width">
+            <a href="/dashboard" class="back-link">
+                ← Dashboard
+            </a>
+        </header>
 
-    <h3>Transaction History</h3>
-    <p class="section-subtitle">Review your income and expenses</p>
+        <section class="card full-width transactions-card">
 
-    <div id="all-transactions">Loading...</div>
+            <div class="transactions-card-header">
+                <div>
+                    <h3>Transaction History</h3>
+                    <p class="section-subtitle">
+                        Review your income and expenses
+                    </p>
+                </div>
+            </div>
 
-</div>
+            <div id="all-transactions">
+                Loading...
+            </div>
 
-</div>
+        </section>
 
-<script src="/static/app.js"></script>
+    </main>
 
-<script>
-loadAllTransactions();
-</script>
+    <script src="/static/app.js"></script>
+
+    <script>
+        loadAllTransactions();
+    </script>
 
 </body>
 

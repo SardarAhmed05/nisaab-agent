@@ -1,9 +1,9 @@
 from datetime import date as date_type
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import delete, select, update
 from sqlalchemy import func
 
-from app.db.models import Transaction, Budget, User, UserIdentity, Notifications
+from app.db.models import ChatConversation, ChatMessage, Transaction, Budget, User, UserIdentity, Notifications
 
 # PHASE 1 CRUD
 
@@ -323,6 +323,113 @@ async def get_or_create_user(
     await session.refresh(user_identity)
 
     return user
+
+
+async def create_chat_conversation(
+    session: AsyncSession,
+    user_id: int,
+    title: str = "New chat",
+) -> ChatConversation:
+    conversation = ChatConversation(user_id=user_id, title=title)
+    session.add(conversation)
+    await session.commit()
+    await session.refresh(conversation)
+    return conversation
+
+
+async def get_chat_conversation(
+    session: AsyncSession,
+    user_id: int,
+    conversation_id: int,
+) -> ChatConversation | None:
+    result = await session.execute(
+        select(ChatConversation).where(
+            ChatConversation.id == conversation_id,
+            ChatConversation.user_id == user_id,
+        )
+    )
+    return result.scalar_one_or_none()
+
+
+async def get_chat_conversations(
+    session: AsyncSession,
+    user_id: int,
+) -> list[ChatConversation]:
+    result = await session.execute(
+        select(ChatConversation)
+        .where(ChatConversation.user_id == user_id)
+        .order_by(ChatConversation.updated_at.desc(), ChatConversation.id.desc())
+    )
+    return list(result.scalars().all())
+
+
+async def create_chat_messages(
+    session: AsyncSession,
+    user_id: int,
+    conversation_id: int,
+    messages: list[tuple[str, str]],
+) -> None:
+    conversation = await get_chat_conversation(session, user_id, conversation_id)
+    if conversation is None:
+        raise ValueError("Conversation does not belong to this user")
+
+    session.add_all(
+        ChatMessage(
+            user_id=user_id,
+            conversation_id=conversation.id,
+            role=role,
+            content=content,
+        )
+        for role, content in messages
+    )
+    values = {"updated_at": func.now()}
+    if conversation.title == "New chat":
+        values["title"] = messages[0][1].strip().replace("\n", " ")[:120] or "New chat"
+    await session.execute(
+        update(ChatConversation)
+        .where(ChatConversation.id == conversation.id)
+        .values(**values)
+    )
+    await session.commit()
+
+
+async def get_chat_messages(
+    session: AsyncSession,
+    user_id: int,
+    conversation_id: int,
+) -> list[ChatMessage]:
+    stmt = (
+        select(ChatMessage)
+        .where(
+            ChatMessage.user_id == user_id,
+            ChatMessage.conversation_id == conversation_id,
+        )
+        .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc())
+    )
+    result = await session.execute(stmt)
+    messages = list(result.scalars().all())
+    messages.reverse()
+    return messages
+
+
+async def delete_chat_conversation(
+    session: AsyncSession,
+    user_id: int,
+    conversation_id: int,
+) -> bool:
+    conversation = await get_chat_conversation(session, user_id, conversation_id)
+    if conversation is None:
+        return False
+
+    await session.execute(
+        delete(ChatMessage).where(
+            ChatMessage.user_id == user_id,
+            ChatMessage.conversation_id == conversation_id,
+        )
+    )
+    await session.delete(conversation)
+    await session.commit()
+    return True
 
 # PHASE 4
 

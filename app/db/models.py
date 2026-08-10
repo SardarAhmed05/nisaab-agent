@@ -1,5 +1,5 @@
 # app/db/models.py
-from sqlalchemy import Integer, String, Float, Date, DateTime, func, ForeignKey, UniqueConstraint
+from sqlalchemy import Integer, String, Text, Float, Date, DateTime, func, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from datetime import date, datetime, timedelta
 
@@ -65,6 +65,28 @@ class UserIdentity(Base):
 
     def __repr__(self) -> str:
         return f"<UserIdentity {self.id} {self.user_id} {self.platform} {self.platform_id} {self.created_at + timedelta(hours=5)} >"
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    conversation_id: Mapped[int] = mapped_column(ForeignKey("chat_conversations.id"), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(10), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
+
+
+class ChatConversation(Base):
+    __tablename__ = "chat_conversations"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(120), nullable=False, default="New chat")
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
+
 
 class Notifications(Base):
     __tablename__ = "notifications"

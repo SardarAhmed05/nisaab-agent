@@ -3,9 +3,30 @@ from datetime import date, datetime
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
+    conversation_id: int = Field(..., gt=0)
 
 class ChatResponse(BaseModel):
     response: str
+    conversation_id: int
+
+
+class ChatConversationResponse(BaseModel):
+    id: int
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ChatHistoryMessage(BaseModel):
+    role: str
+    content: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class TransactionResponse(BaseModel):

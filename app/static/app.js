@@ -21,6 +21,7 @@ async function requireAuth() {
         if (!response.ok) {
 
             localStorage.removeItem("token");
+            localStorage.removeItem("activeConversationId");
             window.location.href = "/";
             return;
 
@@ -31,6 +32,7 @@ async function requireAuth() {
         console.error("Authentication check failed:", error);
 
         localStorage.removeItem("token");
+        localStorage.removeItem("activeConversationId");
         window.location.href = "/";
 
     }
@@ -75,6 +77,7 @@ async function login() {
             "token",
             data.access_token
         );
+        localStorage.removeItem("activeConversationId");
 
 
         window.location.href="/dashboard";
@@ -93,6 +96,8 @@ async function login() {
 const messageBox = document.getElementById("message");
 
 if(messageBox){
+
+    initializeChat();
 
     messageBox.addEventListener("input", () => {
 
@@ -115,6 +120,90 @@ if(messageBox){
 
     });
 
+}
+
+function initializeChatHistoryToggle() {
+
+    const toggle =
+        document.getElementById("chat-history-toggle");
+
+    const sidebar =
+        document.querySelector(".chat-sidebar");
+
+    if (!toggle || !sidebar)
+        return;
+
+
+    function updateToggleState() {
+
+        const isOpen =
+            sidebar.classList.contains("open");
+
+        toggle.setAttribute(
+            "aria-expanded",
+            String(isOpen)
+        );
+
+        toggle.setAttribute(
+            "aria-label",
+            isOpen
+                ? "Close chat history"
+                : "Open chat history"
+        );
+
+        toggle.textContent =
+            isOpen ? "×" : "☰";
+    }
+
+
+    function setInitialState() {
+
+        if (window.innerWidth > 800) {
+
+            sidebar.classList.add("open");
+
+        } else {
+
+            sidebar.classList.remove("open");
+
+        }
+
+        updateToggleState();
+    }
+
+
+    toggle.addEventListener("click", () => {
+
+        sidebar.classList.toggle("open");
+
+        updateToggleState();
+
+    });
+
+
+    setInitialState();
+
+
+    window.addEventListener("resize", () => {
+
+        if (window.innerWidth > 800) {
+
+            sidebar.classList.add("open");
+
+        } else {
+
+            sidebar.classList.remove("open");
+
+        }
+
+        updateToggleState();
+
+    });
+
+}
+
+if (window.location.pathname === "/chat") {
+    initializeChatHistoryToggle();
 }
 
 async function sendMessage() {
@@ -169,7 +258,8 @@ async function sendMessage() {
 
                 body: JSON.stringify({
 
-                    message: text
+                    message: text,
+                    conversation_id: Number(localStorage.getItem("activeConversationId"))
 
                 })
 
@@ -180,6 +270,9 @@ async function sendMessage() {
         const data =
             await response.json();
 
+        if (!response.ok)
+            throw new Error(data.detail || "Could not send message");
+
 
         hideTypingIndicator();
 
@@ -188,6 +281,11 @@ async function sendMessage() {
             data.response,
             "bot"
         );
+
+        if (data.conversation_id)
+            localStorage.setItem("activeConversationId", data.conversation_id);
+
+        loadConversations().catch(console.error);
 
 
     } catch(error) {
@@ -470,6 +568,7 @@ function openChat(){
 function logout(){
 
     localStorage.removeItem("token");
+    localStorage.removeItem("activeConversationId");
 
     window.location.href="/";
 
@@ -713,4 +812,266 @@ if (
     window.location.pathname === "/transactions"
 ) {
     requireAuth();
+}
+
+const welcomeMessage = "Welcome back.\n\nI'm Nisaab, your personal finance assistant. You can ask me about your balance, expenses, transactions, or budgeting.";
+
+async function initializeChat() {
+    const token = localStorage.getItem("token");
+    const sendBtn = document.getElementById("send-btn");
+    if (!token)
+        return;
+
+    if (sendBtn)
+        sendBtn.disabled = true;
+
+    try {
+        await loadConversations();
+        const activeConversationId = localStorage.getItem("activeConversationId");
+
+        if (activeConversationId) {
+            await selectConversation(Number(activeConversationId));
+        } else {
+            await createNewChat();
+        }
+    } catch (error) {
+        console.error(error);
+        await renderChatHistory([]);
+    } finally {
+        if (sendBtn)
+            sendBtn.disabled = false;
+    }
+}
+
+async function loadConversations() {
+    const list = document.getElementById("conversation-list");
+    const token = localStorage.getItem("token");
+
+    if (!list || !token)
+        return;
+
+    const response = await fetch("/api/chat/conversations", {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (!response.ok)
+        throw new Error("Could not load conversations");
+
+    const conversations = await response.json();
+    const activeConversationId = Number(localStorage.getItem("activeConversationId"));
+    list.replaceChildren();
+    
+    conversations.forEach(conversation => {
+    const row = document.createElement("div");
+    row.className = "conversation-row";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "conversation-item";
+    button.textContent = conversation.title;
+    button.title = conversation.title;
+
+    if (conversation.id === activeConversationId)
+        button.classList.add("active");
+
+    button.addEventListener(
+        "click",
+        () => selectConversation(conversation.id)
+    );
+
+    row.appendChild(button);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "conversation-delete";
+    deleteButton.setAttribute(
+        "aria-label",
+        `Delete ${conversation.title}`
+    );
+    deleteButton.textContent = "×";
+
+    deleteButton.addEventListener(
+        "click",
+        () => deleteConversation(conversation)
+    );
+
+    row.appendChild(deleteButton);
+
+    list.appendChild(row);
+})};
+
+
+function conversationDateGroup(updatedAt) {
+    const date = new Date(updatedAt);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    if (date >= today)
+        return "Today";
+    if (date >= yesterday)
+        return "Yesterday";
+    if (date >= weekAgo)
+        return "Previous 7 Days";
+    return "Older";
+}
+
+async function createNewChat() {
+    const token = localStorage.getItem("token");
+    const sendBtn = document.getElementById("send-btn");
+    if (!token)
+        return;
+
+    if (sendBtn)
+        sendBtn.disabled = true;
+
+    try {
+        const response = await fetch("/api/chat/conversations", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!response.ok)
+            throw new Error("Could not create conversation");
+
+        const conversation = await response.json();
+        localStorage.setItem("activeConversationId", conversation.id);
+        await renderChatHistory([]);
+        await loadConversations();
+    } catch (error) {
+        console.error(error);
+    } finally {
+        if (sendBtn)
+            sendBtn.disabled = false;
+    }
+}
+
+const chatHistoryToggle =
+    document.getElementById("chat-history-toggle");
+
+const chatHistoryOpen =
+    document.getElementById("chat-history-open");
+
+if (chatHistoryToggle) {
+
+    chatHistoryToggle.addEventListener("click", () => {
+
+        const sidebar =
+            document.querySelector(".chat-sidebar");
+
+        if (!sidebar)
+            return;
+
+        sidebar.classList.remove("open");
+
+        chatHistoryToggle.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        if (chatHistoryOpen) {
+            chatHistoryOpen.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+        }
+
+    });
+
+}
+
+
+if (chatHistoryOpen) {
+
+    chatHistoryOpen.addEventListener("click", () => {
+
+        const sidebar =
+            document.querySelector(".chat-sidebar");
+
+        if (!sidebar)
+            return;
+
+        sidebar.classList.add("open");
+
+        chatHistoryOpen.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+        if (chatHistoryToggle) {
+            chatHistoryToggle.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+        }
+
+    });
+
+}
+
+async function selectConversation(conversationId) {
+    const token = localStorage.getItem("token");
+    if (!token)
+        return;
+
+    const response = await fetch(
+        `/api/chat/conversations/${conversationId}/messages`,
+        { headers: { "Authorization": `Bearer ${token}` } }
+    );
+
+    if (!response.ok) {
+        localStorage.removeItem("activeConversationId");
+        await createNewChat();
+        return;
+    }
+
+    localStorage.setItem("activeConversationId", conversationId);
+    await renderChatHistory(await response.json());
+    await loadConversations();
+}
+
+async function deleteConversation(conversation) {
+    if (!window.confirm(`Delete “${conversation.title}”? This cannot be undone.`))
+        return;
+
+    const token = localStorage.getItem("token");
+    const response = await fetch(
+        `/api/chat/conversations/${conversation.id}`,
+        {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        }
+    );
+
+    if (!response.ok) {
+        console.error("Could not delete conversation");
+        return;
+    }
+
+    if (Number(localStorage.getItem("activeConversationId")) === conversation.id) {
+        localStorage.removeItem("activeConversationId");
+        await createNewChat();
+    } else {
+        await loadConversations();
+    }
+}
+
+async function renderChatHistory(history) {
+
+    const box = document.getElementById("messages");
+    if (!box)
+        return;
+    box.replaceChildren();
+
+    if (!history.length) {
+        addMessage(welcomeMessage, "bot");
+        return;
+    }
+
+    history.forEach(message => addMessage(
+        message.content,
+        message.role === "assistant" ? "bot" : "user"
+    ));
 }
