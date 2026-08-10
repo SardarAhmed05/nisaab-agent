@@ -22,6 +22,7 @@
     <link rel="shortcut icon" href="/static/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Nisaab" />
+    <meta name="theme-color" content="#f7f8f5" />
     <link rel="manifest" href="/static/site.webmanifest" />    
 </head>
 
@@ -32,9 +33,9 @@
 
     <div class="chat-sidebar-header">
 
-        <span class="chat-sidebar-brand">
+        <a href="/dashboard" class="chat-sidebar-brand brand-link">
             Nisaab
-        </span>
+        </a>
 
         <button
             id="chat-history-toggle"
@@ -68,6 +69,8 @@
 
 </aside>
 
+<div id="chat-sidebar-backdrop" class="chat-sidebar-backdrop"></div>
+
 <button
     id="chat-history-open"
     class="chat-history-open"
@@ -85,7 +88,7 @@
 
         <div>
             <h1 class="wordmark-sm">
-                Nisaab
+                <a href="/dashboard" class="brand-link">Nisaab</a>
             </h1>
 
             <p class="chat-status">
@@ -103,7 +106,7 @@
 </div>
 
 
-<div id="messages" class="messages">
+<div id="messages" class="messages" aria-live="polite" aria-atomic="false">
 </div>
 
 

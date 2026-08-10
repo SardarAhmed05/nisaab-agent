@@ -11,21 +11,34 @@ from app.agent.prompts import get_system_prompt
 from app.db.crud import get_or_create_user
 from app.db.session import AsyncSessionLocal
 load_dotenv()
-from app.agent.models import get_primary_llm, get_fallback_1_llm, get_fallback_2_llm
+from app.agent.models import (
+    get_primary_llm,
+    get_fallback_1_llm,
+    get_fallback_2_llm,
+    get_openrouter_llama_free_llm,
+    get_openrouter_gemini_free_llm,
+    get_openrouter_deepseek_free_llm
+)
 
-llm = get_primary_llm(reasoning_effort="medium", temperature=0)
+llm = get_primary_llm(temperature=0)
 llm_fallback_1 = get_fallback_1_llm(temperature=0)
 llm_fallback_2 = get_fallback_2_llm(temperature=0)
+llm_fallback_3 = get_openrouter_llama_free_llm(temperature=0)
+llm_fallback_4 = get_openrouter_gemini_free_llm(temperature=0)
+llm_fallback_5 = get_openrouter_deepseek_free_llm(temperature=0)
 
 tools = [add_transaction, search_transaction, get_balance, get_total_expenses, get_category_summary, update_transaction, delete_transaction, create_budget, get_active_budgets, get_all_active_budgets, update_budget, delete_budget, get_budget_status]
 
 llm_with_tools = llm.bind_tools(tools)
 
-# Ordered fallback chain: each entry already has tools bound.
+# Ordered 6-tier free multi-provider fallback chain:
 MODEL_CHAIN = [
     llm_with_tools,
     llm_fallback_1.bind_tools(tools),
     llm_fallback_2.bind_tools(tools),
+    llm_fallback_3.bind_tools(tools),
+    llm_fallback_4.bind_tools(tools),
+    llm_fallback_5.bind_tools(tools),
 ]
 
 # Tools that mutate/remove existing records and therefore require user confirmation.

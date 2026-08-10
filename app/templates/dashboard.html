@@ -22,6 +22,7 @@
     <link rel="shortcut icon" href="/static/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="Nisaab" />
+    <meta name="theme-color" content="#f7f8f5" />
     <link rel="manifest" href="/static/site.webmanifest" />
 </head>
 
@@ -38,7 +39,7 @@
             </p>
 
             <h1 class="wordmark-sm">
-                Nisaab
+                <a href="/dashboard" class="brand-link">Nisaab</a>
             </h1>
         </div>
 
@@ -59,10 +60,12 @@
         <div class="welcome-text">
 
             <h3 id="welcome">
-                Loading...
+                <span class="skeleton skeleton-title"></span>
             </h3>
 
-            <p id="user-email"></p>
+            <p id="user-email">
+                <span class="skeleton skeleton-text"></span>
+            </p>
 
         </div>
 
@@ -76,7 +79,7 @@
         </p>
 
         <span id="balance">
-            Loading...
+            <span class="skeleton skeleton-title"></span>
         </span>
 
     </section>
@@ -92,7 +95,7 @@
             </p>
 
             <span id="income">
-                Loading...
+                <span class="skeleton skeleton-title"></span>
             </span>
 
         </section>
@@ -105,7 +108,7 @@
             </p>
 
             <span id="expenses">
-                Loading...
+                <span class="skeleton skeleton-title"></span>
             </span>
 
         </section>
@@ -121,7 +124,7 @@
         </h3>
 
         <div id="category-breakdown">
-            Loading...
+            <span class="skeleton skeleton-block"></span>
         </div>
 
     </section>
@@ -135,7 +138,7 @@
         </h3>
 
         <div id="transactions">
-            Loading...
+            <span class="skeleton skeleton-block"></span>
         </div>
 
     </section>

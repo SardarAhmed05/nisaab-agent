@@ -79,8 +79,11 @@ async function login() {
         );
         localStorage.removeItem("activeConversationId");
 
+        showToast("Login successful! Redirecting...", "success");
 
-        window.location.href="/dashboard";
+        setTimeout(() => {
+            window.location.href="/dashboard";
+        }, 600);
 
     }
 
@@ -92,6 +95,77 @@ async function login() {
     }
 
 }
+
+let googleClientId = "";
+
+async function initGoogleAuth() {
+    try {
+        const res = await fetch("/api/auth/google/config");
+        if (res.ok) {
+            const data = await res.json();
+            googleClientId = data.client_id || "";
+            if (googleClientId && window.google && window.google.accounts && window.google.accounts.id) {
+                google.accounts.id.initialize({
+                    client_id: googleClientId,
+                    callback: handleGoogleCallback,
+                    auto_select: false
+                });
+            }
+        }
+    } catch (err) {
+        console.error("Google Auth Config fetch error:", err);
+    }
+}
+
+async function handleGoogleSignIn() {
+    if (googleClientId && window.google && window.google.accounts && window.google.accounts.id) {
+        google.accounts.id.prompt((notification) => {
+            if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                if (window.google.accounts.oauth2) {
+                    const client = google.accounts.oauth2.initTokenClient({
+                        client_id: googleClientId,
+                        scope: "email profile openid",
+                        callback: handleGoogleCallback
+                    });
+                    client.requestAccessToken();
+                }
+            }
+        });
+    } else {
+        showToast("Please set GOOGLE_CLIENT_ID in your .env file to enable Google Sign-In", "info");
+    }
+}
+
+async function handleGoogleCallback(response) {
+    const credential = response.credential || response.access_token;
+    if (!credential) return;
+
+    try {
+        showToast("Signing in with Google...", "info");
+        const res = await fetch("/api/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ credential })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem("token", data.access_token);
+            localStorage.removeItem("activeConversationId");
+            showToast("Google Sign-In successful! Redirecting...", "success");
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 600);
+        } else {
+            showToast(data.detail || "Google authentication failed", "error");
+        }
+    } catch (err) {
+        console.error("Google Auth error:", err);
+        showToast("Error connecting to Google Auth", "error");
+    }
+}
+
+window.addEventListener("DOMContentLoaded", initGoogleAuth);
 
 const messageBox = document.getElementById("message");
 
@@ -106,6 +180,13 @@ if(messageBox){
         messageBox.style.height =
             Math.min(messageBox.scrollHeight, 150) + "px";
 
+    });
+
+    messageBox.addEventListener("focus", () => {
+        setTimeout(() => {
+            const box = document.getElementById("messages");
+            if (box) box.scrollTop = box.scrollHeight;
+        }, 300);
     });
 
     messageBox.addEventListener("keydown", function(event){
@@ -127,10 +208,13 @@ function initializeChatHistoryToggle() {
     const toggle =
         document.getElementById("chat-history-toggle");
 
+    const openBtn =
+        document.getElementById("chat-history-open");
+
     const sidebar =
         document.querySelector(".chat-sidebar");
 
-    if (!toggle || !sidebar)
+    if (!sidebar)
         return;
 
 
@@ -139,20 +223,19 @@ function initializeChatHistoryToggle() {
         const isOpen =
             sidebar.classList.contains("open");
 
-        toggle.setAttribute(
-            "aria-expanded",
-            String(isOpen)
-        );
+        if (toggle) {
+            toggle.setAttribute(
+                "aria-expanded",
+                String(isOpen)
+            );
+        }
 
-        toggle.setAttribute(
-            "aria-label",
-            isOpen
-                ? "Close chat history"
-                : "Open chat history"
-        );
-
-        toggle.textContent =
-            isOpen ? "×" : "☰";
+        if (openBtn) {
+            openBtn.setAttribute(
+                "aria-expanded",
+                String(isOpen)
+            );
+        }
     }
 
 
@@ -172,14 +255,37 @@ function initializeChatHistoryToggle() {
     }
 
 
-    toggle.addEventListener("click", () => {
+    if (toggle) {
+        toggle.addEventListener("click", () => {
 
-        sidebar.classList.toggle("open");
+            sidebar.classList.remove("open");
 
-        updateToggleState();
+            updateToggleState();
 
-    });
+        });
+    }
 
+
+    if (openBtn) {
+        openBtn.addEventListener("click", () => {
+
+            sidebar.classList.add("open");
+
+            updateToggleState();
+
+        });
+    }
+
+
+    const backdrop =
+        document.getElementById("chat-sidebar-backdrop");
+
+    if (backdrop) {
+        backdrop.addEventListener("click", () => {
+            sidebar.classList.remove("open");
+            updateToggleState();
+        });
+    }
 
     setInitialState();
 
@@ -352,29 +458,58 @@ function addMessage(
     text,
     type
 ){
-
     const box =
         document.getElementById("messages");
 
+    if (!box) return;
 
-    const div =
-        document.createElement("div");
+    const existingChips = box.querySelector(".prompt-chips-container");
+    if (existingChips) {
+        existingChips.remove();
+    }
 
+    if (type === "bot") {
+        const wrapper = document.createElement("div");
+        wrapper.className = "bot-message-wrapper";
 
-    div.className =
-        `${type} message`;
+        const div = document.createElement("div");
+        div.className = "bot message";
+        div.innerHTML = formatMessage(text);
+        wrapper.appendChild(div);
 
+        const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "msg-copy-btn";
+        copyBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span>Copy</span>
+        `;
 
-    div.innerHTML =
-        formatMessage(text);
+        copyBtn.onclick = () => {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    const label = copyBtn.querySelector("span");
+                    if (label) label.innerText = "✓ Copied";
+                    setTimeout(() => {
+                        if (label) label.innerText = "Copy";
+                    }, 2000);
+                }).catch(console.error);
+            }
+        };
 
+        wrapper.appendChild(copyBtn);
+        box.appendChild(wrapper);
+    } else {
+        const div = document.createElement("div");
+        div.className = `${type} message`;
+        div.innerHTML = formatMessage(text);
+        box.appendChild(div);
+    }
 
-    box.appendChild(div);
-
-
-    box.scrollTop =
-        box.scrollHeight;
-
+    box.scrollTop = box.scrollHeight;
 }
 
 function formatMessage(text) {
@@ -473,6 +608,42 @@ async function loadDashboard(){
     else{
 
         const maxAmount = Math.max(...categories.map(([, amount]) => amount));
+        const totalSpending = categories.reduce((sum, [, amt]) => sum + amt, 0);
+
+        if (totalSpending > 0) {
+            const chartColors = ["#f2a93b", "#3fbf8f", "#f0665b", "#8a968f", "#53645a"];
+            const donutContainer = document.createElement("div");
+            donutContainer.className = "category-analytics-container";
+
+            let cumulativePercent = 0;
+            const radius = 34;
+            const circumference = 2 * Math.PI * radius;
+
+            let circlesSvg = "";
+            let legendHtml = "";
+
+            categories.forEach(([cat, amt], idx) => {
+                const color = chartColors[idx % chartColors.length];
+                const pct = (amt / totalSpending);
+                const dashArray = `${pct * circumference} ${circumference}`;
+                const dashOffset = -cumulativePercent * circumference;
+                cumulativePercent += pct;
+
+                circlesSvg += `<circle cx="45" cy="45" r="${radius}" fill="transparent" stroke="${color}" stroke-width="12" stroke-dasharray="${dashArray}" stroke-dashoffset="${dashOffset}" />`;
+                legendHtml += `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span><span>${cat} (${Math.round(pct * 100)}%)</span></div>`;
+            });
+
+            donutContainer.innerHTML = `
+                <svg class="donut-chart-svg" viewBox="0 0 90 90">
+                    ${circlesSvg}
+                </svg>
+                <div class="category-legend">
+                    ${legendHtml}
+                </div>
+            `;
+
+            categoryBox.appendChild(donutContainer);
+        }
 
         categories.forEach(([category, amount]) => {
 
@@ -570,7 +741,11 @@ function logout(){
     localStorage.removeItem("token");
     localStorage.removeItem("activeConversationId");
 
-    window.location.href="/";
+    showToast("Logged out successfully", "info");
+
+    setTimeout(() => {
+        window.location.href="/";
+    }, 600);
 
 }
 
@@ -616,9 +791,11 @@ async function signup(){
 
     if(response.ok){
 
-        alert("Account created successfully!");
+        showToast("Account created successfully!", "success");
 
-        window.location.href="/";
+        setTimeout(() => {
+            window.location.href="/";
+        }, 1000);
 
     }
 
@@ -936,6 +1113,11 @@ async function createNewChat() {
         if (!response.ok)
             throw new Error("Could not create conversation");
 
+        if (window.innerWidth <= 800) {
+            const sidebar = document.querySelector(".chat-sidebar");
+            if (sidebar) sidebar.classList.remove("open");
+        }
+
         const conversation = await response.json();
         localStorage.setItem("activeConversationId", conversation.id);
         await renderChatHistory([]);
@@ -948,73 +1130,15 @@ async function createNewChat() {
     }
 }
 
-const chatHistoryToggle =
-    document.getElementById("chat-history-toggle");
-
-const chatHistoryOpen =
-    document.getElementById("chat-history-open");
-
-if (chatHistoryToggle) {
-
-    chatHistoryToggle.addEventListener("click", () => {
-
-        const sidebar =
-            document.querySelector(".chat-sidebar");
-
-        if (!sidebar)
-            return;
-
-        sidebar.classList.remove("open");
-
-        chatHistoryToggle.setAttribute(
-            "aria-expanded",
-            "false"
-        );
-
-        if (chatHistoryOpen) {
-            chatHistoryOpen.setAttribute(
-                "aria-expanded",
-                "false"
-            );
-        }
-
-    });
-
-}
-
-
-if (chatHistoryOpen) {
-
-    chatHistoryOpen.addEventListener("click", () => {
-
-        const sidebar =
-            document.querySelector(".chat-sidebar");
-
-        if (!sidebar)
-            return;
-
-        sidebar.classList.add("open");
-
-        chatHistoryOpen.setAttribute(
-            "aria-expanded",
-            "true"
-        );
-
-        if (chatHistoryToggle) {
-            chatHistoryToggle.setAttribute(
-                "aria-expanded",
-                "true"
-            );
-        }
-
-    });
-
-}
-
 async function selectConversation(conversationId) {
     const token = localStorage.getItem("token");
     if (!token)
         return;
+
+    if (window.innerWidth <= 800) {
+        const sidebar = document.querySelector(".chat-sidebar");
+        if (sidebar) sidebar.classList.remove("open");
+    }
 
     const response = await fetch(
         `/api/chat/conversations/${conversationId}/messages`,
@@ -1032,9 +1156,90 @@ async function selectConversation(conversationId) {
     await loadConversations();
 }
 
+function showToast(message, type = "info") {
+    let container = document.querySelector(".toast-container");
+    if (!container) {
+        container = document.createElement("div");
+        container.className = "toast-container";
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    
+    const iconMap = {
+        success: "✓",
+        error: "✕",
+        info: "ℹ"
+    };
+
+    toast.innerHTML = `
+        <span class="toast-icon">${iconMap[type] || "ℹ"}</span>
+        <span>${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-10px) scale(0.95)";
+        setTimeout(() => toast.remove(), 200);
+    }, 3200);
+}
+
+function showConfirmModal(title, message, confirmText = "Delete", cancelText = "Cancel") {
+    return new Promise((resolve) => {
+        let backdrop = document.querySelector(".confirm-modal-backdrop");
+        if (!backdrop) {
+            backdrop = document.createElement("div");
+            backdrop.className = "confirm-modal-backdrop";
+            backdrop.innerHTML = `
+                <div class="confirm-modal">
+                    <h3 id="modal-title"></h3>
+                    <p id="modal-desc"></p>
+                    <div class="confirm-actions">
+                        <button type="button" class="btn-secondary" id="modal-cancel-btn"></button>
+                        <button type="button" class="btn-danger" id="modal-confirm-btn"></button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(backdrop);
+        }
+
+        document.getElementById("modal-title").innerText = title;
+        document.getElementById("modal-desc").innerText = message;
+        
+        const cancelBtn = document.getElementById("modal-cancel-btn");
+        const confirmBtn = document.getElementById("modal-confirm-btn");
+        
+        cancelBtn.innerText = cancelText;
+        confirmBtn.innerText = confirmText;
+
+        backdrop.classList.add("open");
+
+        function cleanup(result) {
+            backdrop.classList.remove("open");
+            cancelBtn.onclick = null;
+            confirmBtn.onclick = null;
+            resolve(result);
+        }
+
+        cancelBtn.onclick = () => cleanup(false);
+        confirmBtn.onclick = () => cleanup(true);
+        backdrop.onclick = (e) => {
+            if (e.target === backdrop) cleanup(false);
+        };
+    });
+}
+
 async function deleteConversation(conversation) {
-    if (!window.confirm(`Delete “${conversation.title}”? This cannot be undone.`))
-        return;
+    const confirmed = await showConfirmModal(
+        "Delete Conversation",
+        `Are you sure you want to delete “${conversation.title}”? This action cannot be undone.`,
+        "Delete",
+        "Cancel"
+    );
+    if (!confirmed) return;
 
     const token = localStorage.getItem("token");
     const response = await fetch(
@@ -1046,9 +1251,11 @@ async function deleteConversation(conversation) {
     );
 
     if (!response.ok) {
-        console.error("Could not delete conversation");
+        showToast("Could not delete conversation", "error");
         return;
     }
+
+    showToast("Conversation deleted", "info");
 
     if (Number(localStorage.getItem("activeConversationId")) === conversation.id) {
         localStorage.removeItem("activeConversationId");
@@ -1067,6 +1274,32 @@ async function renderChatHistory(history) {
 
     if (!history.length) {
         addMessage(welcomeMessage, "bot");
+
+        const chipsContainer = document.createElement("div");
+        chipsContainer.className = "prompt-chips-container";
+
+        const prompts = [
+            "💡 Show my monthly spending summary",
+            "📊 What is my highest expense category?",
+            "💰 How can I save money this week?"
+        ];
+
+        prompts.forEach(promptText => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "prompt-chip";
+            chip.textContent = promptText;
+            chip.onclick = () => {
+                const input = document.getElementById("message");
+                if (input) {
+                    input.value = promptText.replace(/^[^\w\s]+\s*/, "");
+                    sendMessage();
+                }
+            };
+            chipsContainer.appendChild(chip);
+        });
+
+        box.appendChild(chipsContainer);
         return;
     }
 
@@ -1075,3 +1308,25 @@ async function renderChatHistory(history) {
         message.role === "assistant" ? "bot" : "user"
     ));
 }
+
+// Global Keyboard Shortcuts
+window.addEventListener("keydown", (e) => {
+    // Ctrl+K or Cmd+K or '/' (when not typing in an input) to focus chat textarea
+    if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") || (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA")) {
+        const chatInput = document.getElementById("message");
+        if (chatInput) {
+            e.preventDefault();
+            chatInput.focus();
+        }
+    }
+
+    // Escape to close chat sidebar
+    if (e.key === "Escape") {
+        const sidebar = document.querySelector(".chat-sidebar");
+        if (sidebar && sidebar.classList.contains("open")) {
+            sidebar.classList.remove("open");
+            const toggle = document.getElementById("chat-history-toggle");
+            if (toggle) toggle.setAttribute("aria-expanded", "false");
+        }
+    }
+});

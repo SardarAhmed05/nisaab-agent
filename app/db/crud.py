@@ -330,6 +330,27 @@ async def create_chat_conversation(
     user_id: int,
     title: str = "New chat",
 ) -> ChatConversation:
+    # Cleanup any empty conversations for this user that have no messages
+    empty_subquery = (
+        select(ChatConversation.id)
+        .where(
+            ChatConversation.user_id == user_id,
+            ~select(ChatMessage.id)
+            .where(
+                ChatMessage.conversation_id == ChatConversation.id,
+                ChatMessage.user_id == user_id,
+            )
+            .exists(),
+        )
+    )
+    empty_res = await session.execute(empty_subquery)
+    empty_ids = list(empty_res.scalars().all())
+    if empty_ids:
+        await session.execute(
+            delete(ChatConversation).where(ChatConversation.id.in_(empty_ids))
+        )
+        await session.commit()
+
     conversation = ChatConversation(user_id=user_id, title=title)
     session.add(conversation)
     await session.commit()
@@ -355,9 +376,21 @@ async def get_chat_conversations(
     session: AsyncSession,
     user_id: int,
 ) -> list[ChatConversation]:
+    # Only return conversations that have at least one logged message
+    has_messages = (
+        select(ChatMessage.id)
+        .where(
+            ChatMessage.conversation_id == ChatConversation.id,
+            ChatMessage.user_id == user_id,
+        )
+        .exists()
+    )
     result = await session.execute(
         select(ChatConversation)
-        .where(ChatConversation.user_id == user_id)
+        .where(
+            ChatConversation.user_id == user_id,
+            has_messages,
+        )
         .order_by(ChatConversation.updated_at.desc(), ChatConversation.id.desc())
     )
     return list(result.scalars().all())

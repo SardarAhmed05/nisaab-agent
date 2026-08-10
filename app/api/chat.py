@@ -21,6 +21,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def sanitize_agent_response(text: str) -> str:
+    if not text:
+        return text
+    for dash in ["\u2011", "\u2012", "\u2013", "\u2014"]:
+        text = text.replace(dash, "-")
+    for space in ["\u202f", "\u00a0", "\u2007", "\u200b"]:
+        text = text.replace(space, " ")
+    return text
+
+
 @router.get("/chat/conversations", response_model=list[ChatConversationResponse])
 async def chat_conversations(user_id: int = Depends(get_current_user)):
     async with AsyncSessionLocal() as session:
@@ -132,6 +142,7 @@ async def chat(
             )
 
         response = str(response).strip()
+        response = sanitize_agent_response(response)
 
         if not response:
             response = (

@@ -1,5 +1,5 @@
 # app/db/models.py
-from sqlalchemy import Integer, String, Text, Float, Date, DateTime, func, ForeignKey, UniqueConstraint
+from sqlalchemy import Integer, String, Text, Float, Date, DateTime, func, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from datetime import date, datetime, timedelta
 
@@ -8,6 +8,9 @@ class Base(DeclarativeBase):
 
 class Transaction(Base):
     __tablename__ = "transactions"
+    __table_args__ = (
+        Index("ix_transactions_user_id_date", "user_id", "date"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
@@ -69,6 +72,9 @@ class UserIdentity(Base):
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
+    __table_args__ = (
+        Index("ix_chat_messages_user_id_conversation_id", "user_id", "conversation_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)

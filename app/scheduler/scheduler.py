@@ -20,7 +20,8 @@ async def run_daily_check():
                 if not transactions:
                     message = "You haven't logged anything today. Don't forget to record any spending or income!"
                 else:
-                    message = f"You logged {len(transactions)} transaction(s) today:\n" + "\n".join(str(t) for t in transactions)
+                    txn_lines = [f"• {t.type.title()}: ₨{t.amount:,.0f} — {t.category.title()} ({t.description or 'No description'})" for t in transactions]
+                    message = f"You logged {len(transactions)} transaction(s) today:\n\n" + "\n".join(txn_lines)
 
                 if user.email:
                     send_email(user.email, subject="Transactions Log Update", body=message)
@@ -71,7 +72,7 @@ async def check_remaining_budget_days(session, user):
                 already_sent = await has_notification(session, user.id, notification_type, reference_id=budget.id)
                 if already_sent:
                     continue
-                message = f"You have {days_remaining} day(s) remaining before your budget ends.and you have only spent {status['percentage_used']}% of it. You can spend freely and enjoy the rest of your budget unless you plan to save."
+                message = f"You have {days_remaining} day(s) remaining before your budget ends, and you have only spent {status['percentage_used']:.0f}% of it. You can spend freely and enjoy the rest of your budget unless you plan to save."
                 if user.email:
                     send_email(user.email, subject=f"Remaining Budget - {100 - status['percentage_used']}% left.", body=message)
                     await create_notification(
