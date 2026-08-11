@@ -713,6 +713,36 @@ button:focus-visible {
     border-radius: 22px;
 
     background:
+
+.balance-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.currency-select {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--dash-border);
+    color: var(--dash-text);
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.currency-select:hover {
+    border-color: #10b981;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.currency-select option {
+    background: #141b18;
+    color: #ffffff;
+}
         linear-gradient(
             135deg,
             #ffffff,

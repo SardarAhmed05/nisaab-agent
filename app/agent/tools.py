@@ -5,6 +5,39 @@ from datetime import date as date_type
 from typing import Annotated
 from langgraph.prebuilt import InjectedState
 
+import json
+import urllib.request
+
+DEFAULT_PKR_RATES = {
+    "USD": 278.5,
+    "EUR": 302.0,
+    "GBP": 355.0,
+    "SAR": 74.2,
+    "AED": 75.8,
+    "CAD": 205.0,
+    "AUD": 182.0,
+    "INR": 3.3,
+    "PKR": 1.0,
+}
+
+def get_exchange_rate_to_pkr(currency: str) -> float:
+    curr = currency.upper().strip()
+    if curr == "PKR":
+        return 1.0
+    try:
+        url = "https://open.er-api.com/v6/latest/USD"
+        req = urllib.request.Request(url, headers={"User-Agent": "Nisaab/1.0"})
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read().decode("utf-8"))
+                rates = data.get("rates", {})
+                pkr_rate = rates.get("PKR", 278.5)
+                if curr in rates and rates[curr] > 0:
+                    return (1.0 / rates[curr]) * pkr_rate
+    except Exception:
+        pass
+    return DEFAULT_PKR_RATES.get(curr, 278.5)
+
 # PHASE 1
 
 @tool
@@ -16,24 +49,36 @@ async def add_transaction(
     description: str,
     date: str, 
     source: str | None = None,
-    confidence: str = "confirmed"
+    confidence: str = "confirmed",
+    currency: str = "PKR"
 ) -> str:  
     """Add a new income or expense transaction to the ledger. The category must describe 
 the actual source (for income) or purpose (for expense) — e.g. 'freelance', 'allowance', 
-'food', 'groceries', 'transport'. Never use the transaction's own type ('income' or 'expense') 
+'food', 'groceries', 'transport'. If the user specifies a foreign currency (e.g. USD, EUR, SAR, 
+AED, GBP, CAD), pass currency='USD' (or matching code). Amounts will automatically be converted 
+to PKR at real-time exchange rates. Never use the transaction's own type ('income' or 'expense') 
 as the category. Even if a category seems obvious, always call search_transaction first to check 
-whether a similar category already exists (e.g. don't create 'chai' as its own category if 'food' 
-already covers casual food/drink purchases) — reuse the existing category instead of creating a 
-near-duplicate. Only ask the user if search_transaction shows no reasonable existing match."""
+whether a similar category already exists — reuse the existing category instead of creating a 
+near-duplicate."""
     user_id = state["user_id"]
     category = category.lower() if category else None
     parsed_date = date_type.fromisoformat(date)
+
+    curr_code = currency.upper().strip() if currency else "PKR"
+    final_amount = amount
+    original_note = ""
+
+    if curr_code != "PKR":
+        rate = get_exchange_rate_to_pkr(curr_code)
+        final_amount = round(amount * rate, 2)
+        original_note = f" (converted from {curr_code} {amount})"
+        description = f"{description} ({curr_code} {amount})"
 
     async with AsyncSessionLocal() as session:
         txn = await crud.create_transaction(
             session=session,
             user_id=user_id,
-            amount=amount,
+            amount=final_amount,
             type=type,
             category=category,
             description=description,
@@ -41,7 +86,7 @@ near-duplicate. Only ask the user if search_transaction shows no reasonable exis
             source=source,
             confidence=confidence)
         
-        return f"Added {txn.type} of {txn.amount} in category '{txn.category}' on {txn.date} (id={txn.id})"
+        return f"Added {txn.type} of ₨{txn.amount}{original_note} in category '{txn.category}' on {txn.date} (id={txn.id})"
 
 @tool 
 async def search_transaction(
@@ -359,3 +404,27 @@ say so clearly."""
         )
     else:
         return "No active budget found for this category"
+
+
+@tool
+async def set_user_currency(
+    currency: str,
+    state: Annotated[dict, InjectedState],
+) -> str:
+    """Set or update the user's preferred account currency (e.g. 'USD', 'EUR', 'GBP', 'PKR', 'SAR', 'AED', 'CAD', 'AUD', 'INR').
+    Updates the user's account settings so their dashboard balance, income, expenses, and transaction views display in their preferred currency."""
+    user_id = state["user_id"]
+    curr_code = currency.upper().strip()
+    from app.db.models import User
+    from sqlalchemy import select
+    from app.api.user import get_currency_symbol
+
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user:
+            user.currency = curr_code
+            await session.commit()
+            symbol = get_currency_symbol(curr_code)
+            return f"Successfully updated your account currency to {curr_code} ({symbol}). Your dashboard and transaction metrics will now display in {curr_code}."
+        return "Could not find user account to update currency."

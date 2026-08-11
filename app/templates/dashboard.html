@@ -74,9 +74,19 @@
 
     <section class="balance-card">
 
-        <p class="dashboard-label">
-            Current balance
-        </p>
+        <div class="balance-card-header">
+            <p class="dashboard-label">
+                Current balance
+            </p>
+            <select id="currency-select" class="currency-select" onchange="changeCurrency(this.value)">
+                <option value="PKR">PKR (₨)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="SAR">SAR</option>
+                <option value="AED">AED</option>
+            </select>
+        </div>
 
         <span id="balance">
             <span class="skeleton skeleton-title"></span>

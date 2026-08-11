@@ -528,6 +528,23 @@ function formatMessage(text) {
     return escaped;
 }
 
+async function changeCurrency(newCurrency) {
+    const token = localStorage.getItem("token");
+    try {
+        const response = await fetch(`/api/user/currency?currency=${encodeURIComponent(newCurrency)}`, {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+        if (response.ok) {
+            await loadDashboard();
+        }
+    } catch (err) {
+        console.error("Failed to update currency:", err);
+    }
+}
+
 async function loadDashboard(){
 
     const token =
@@ -559,6 +576,11 @@ async function loadDashboard(){
     .innerText =
     user.email;
 
+    const currSelect = document.getElementById("currency-select");
+    if (currSelect && user.currency) {
+        currSelect.value = user.currency;
+    }
+
     const analyticsResponse =
         await fetch(
             "/api/analytics/summary",
@@ -575,19 +597,21 @@ async function loadDashboard(){
         await analyticsResponse.json();
 
 
+    const symbol = user.currency_symbol || "₨";
+
     document.getElementById("balance")
     .innerText =
-    `₨ ${Math.max(0, analytics.balance).toLocaleString()}`;
+    `${symbol} ${Math.max(0, analytics.balance).toLocaleString()}`;
 
 
     document.getElementById("income")
     .innerText =
-    `₨ ${analytics.income.toLocaleString()}`;
+    `${symbol} ${analytics.income.toLocaleString()}`;
 
 
     document.getElementById("expenses")
     .innerText =
-    `₨ ${analytics.expenses.toLocaleString()}`;
+    `${symbol} ${analytics.expenses.toLocaleString()}`;
 
 
     const categoryBox =
@@ -897,6 +921,15 @@ async function loadAllTransactions(){
         let totalExpenses = 0;
 
 
+        let symbol = "₨";
+        try {
+            const meRes = await fetch("/api/me", { headers: { "Authorization": `Bearer ${token}` } });
+            if (meRes.ok) {
+                const meData = await meRes.json();
+                symbol = meData.currency_symbol || "₨";
+            }
+        } catch (e) { console.error(e); }
+
         if(transactions.length === 0){
 
             box.innerHTML = `
@@ -943,7 +976,7 @@ async function loadAllTransactions(){
                     </div>
 
                     <div class="txn-amount ${txn.type}">
-                        ${sign}₨ ${amount.toLocaleString()}
+                        ${sign}${symbol} ${amount.toLocaleString()}
                     </div>
                 `;
 
@@ -962,13 +995,13 @@ async function loadAllTransactions(){
 
         if(incomeElement){
             incomeElement.innerText =
-                `₨ ${totalIncome.toLocaleString()}`;
+                `${symbol} ${totalIncome.toLocaleString()}`;
         }
 
 
         if(expenseElement){
             expenseElement.innerText =
-                `₨ ${totalExpenses.toLocaleString()}`;
+                `${symbol} ${totalExpenses.toLocaleString()}`;
         }
 
 

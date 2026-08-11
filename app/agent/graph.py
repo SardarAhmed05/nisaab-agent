@@ -15,30 +15,24 @@ from app.agent.models import (
     get_primary_llm,
     get_fallback_1_llm,
     get_fallback_2_llm,
-    get_openrouter_llama_free_llm,
-    get_openrouter_gemini_free_llm,
-    get_openrouter_deepseek_free_llm
+    get_openrouter_free_llm
 )
 
 llm = get_primary_llm(temperature=0)
 llm_fallback_1 = get_fallback_1_llm(temperature=0)
 llm_fallback_2 = get_fallback_2_llm(temperature=0)
-llm_fallback_3 = get_openrouter_llama_free_llm(temperature=0)
-llm_fallback_4 = get_openrouter_gemini_free_llm(temperature=0)
-llm_fallback_5 = get_openrouter_deepseek_free_llm(temperature=0)
+llm_fallback_3 = get_openrouter_free_llm(temperature=0)
 
-tools = [add_transaction, search_transaction, get_balance, get_total_expenses, get_category_summary, update_transaction, delete_transaction, create_budget, get_active_budgets, get_all_active_budgets, update_budget, delete_budget, get_budget_status]
+tools = [add_transaction, search_transaction, get_balance, get_total_expenses, get_category_summary, update_transaction, delete_transaction, create_budget, get_active_budgets, get_all_active_budgets, update_budget, delete_budget, get_budget_status, set_user_currency]
 
 llm_with_tools = llm.bind_tools(tools)
 
-# Ordered 6-tier free multi-provider fallback chain:
+# Ordered 4-tier free model fallback chain (Groq multi-quota + OpenRouter auto-router):
 MODEL_CHAIN = [
     llm_with_tools,
     llm_fallback_1.bind_tools(tools),
     llm_fallback_2.bind_tools(tools),
     llm_fallback_3.bind_tools(tools),
-    llm_fallback_4.bind_tools(tools),
-    llm_fallback_5.bind_tools(tools),
 ]
 
 # Tools that mutate/remove existing records and therefore require user confirmation.

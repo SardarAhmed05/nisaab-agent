@@ -48,13 +48,16 @@ class TransactionResponse(BaseModel):
 class BalanceResponse(BaseModel):
     user_id: int
     balance: float
-    currency: str
+    currency: str = "PKR"
+
 
 class AnalyticsSummaryResponse(BaseModel):
     balance: float
     income: float
     expenses: float
     category_breakdown: dict[str, float]
+    currency: str = "PKR"
+    currency_symbol: str = "₨"
 
 
 class UserResponse(BaseModel):
