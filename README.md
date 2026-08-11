@@ -1,11 +1,13 @@
 # Nisaab — Your Personal Finance Agent
 
+[![Live Web Application](https://img.shields.io/badge/Live_App-nisaab.online-00E676?style=for-the-badge&logo=googlechrome&logoColor=white)](https://nisaab.online)
 ![Agentic AI](https://img.shields.io/badge/Architecture-Agentic_AI-FF6F00?style=for-the-badge&logo=langchain&logoColor=white)
 ![LangGraph](https://img.shields.io/badge/Framework-LangGraph_StateGraph-000000?style=for-the-badge&logo=langchain)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI_Python_3.11+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Groq](https://img.shields.io/badge/Inference-Groq_Ultra--Fast_LPUs-f34f29?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)
 
+> 🌐 **Live Web Application**: [https://nisaab.online](https://nisaab.online)  
 > **Take control of your finances with clarity.**  
 > Nisaab is an autonomous, production-grade **Agentic AI Assistant** designed to manage income, track multi-category expenses across global currencies, enforce budget limits, analyze financial health, and guide wealth goals through natural language conversations.
 
