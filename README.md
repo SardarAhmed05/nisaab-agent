@@ -107,7 +107,12 @@ To maintain 99.9% availability with **$0.00 API costs**, Nisaab implements a mul
 - **🔐 Single Sign-On (SSO) & JWT Security**: Secure password hashing (`bcrypt`), JWT token verification, login rate-limiting, and native 1-click **Continue with Google** SSO.
 - **📊 Real-Time Analytics Dashboard**: Visual category spending donut charts, net income vs. expense progress, and live transaction feeds.
 - **🧹 Automated Clean Chat History**: Automatically purges empty/abandoned chat sessions, keeping the user's sidebar history pristine.
-- **✉️ Responsive HTML Email Digests**: Scheduled daily background email summaries formatted with UTF-8 MIME multipart cards.
+- **✉️ Automated Multi-Type HTML Email Engine**: Background scheduler (APScheduler) sending 5 types of responsive HTML emails:
+  1. *Daily Transaction Digests* (summary of daily spending & income).
+  2. *Proactive Budget Milestone Alerts* (warnings when spending reaches 50%, 75%, 90%, or exceeds 100%).
+  3. *Budget Expiry & Period Reminders* (notifications as budget end dates approach).
+  4. *No-Spending Streak Achievements* (celebrating days of zero spending).
+  5. *Unusual Spending Anomaly Detection & Weekly Reports* (flagging sudden spending spikes).
 
 ---
 
